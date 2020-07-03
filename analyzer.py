@@ -15,7 +15,9 @@ class HelperAnalyzer:
         self.N_TEACH_BAD = teach[teach.status.isin(bad_statuses)].shape[0]
 
         self.N_TEST = test.shape[0]
+        test.amount = pd.to_numeric(test.amount, errors="coerce")
         self.AMOUNT_TEST = sum(test.amount)
+
         test.cum_amount = test.amount.cumsum()
 
         test_bad = test[test.status.isin(bad_statuses)]
@@ -119,7 +121,7 @@ class AnalyzerPrediction:
     def get_convert_test(self)->pd.DataFrame:
         test = self.test.copy()
         white_list = self.white_list
-        test["probability"] = pd.to_numeric(test.probability, errors="coerce")
+        test["probability"] = pd.to_numeric(test["probability"], errors="coerce")
         test["amount"] = pd.to_numeric(test.amount, errors="coerce")
         test.loc[test.id.isin(white_list.ID), 'probability'] = 0
         test.sort_values(by="probability", ascending=False, inplace=True)
