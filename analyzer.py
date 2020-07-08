@@ -6,9 +6,9 @@ class HelperAnalyzer:
 
     BAD_STATUSES = (1, '1', 'true')
 
-    def __init__(self, teach: pd.DataFrame, test: pd.DataFrame, white_list: pd.DataFrame):
-        bad_statuses = HelperAnalyzer.BAD_STATUSES
+    def __init__(self, teach: pd.DataFrame, test: pd.DataFrame, white_list=None):
 
+        bad_statuses = HelperAnalyzer.BAD_STATUSES
         self.N_WHITE_LIST = white_list.shape[0]
 
         self.N_TEACH = teach.shape[0]
@@ -37,11 +37,14 @@ class HelperAnalyzer:
 
 class AnalyzerPrediction:
 
-    def __init__(self, teach: pd.DataFrame, test: pd.DataFrame, white_list=np.nan):
-        self.params = HelperAnalyzer(teach, test, white_list)
+    def __init__(self, teach: pd.DataFrame, test: pd.DataFrame, white_list=None):
+        if white_list is None:
+            white_list = self.get_empty_white_list()
+        self.white_list = white_list
         self.teach = teach
         self.test = test
-        self.white_list = self.get_empty_white_list() if type(white_list).__name__ != 'DataFrame' else white_list
+        self.params = HelperAnalyzer(teach, test, white_list)
+
 
     @classmethod
     def get_rating(cls, row: dict)->float:
@@ -91,7 +94,7 @@ class AnalyzerPrediction:
         n_bad = test_first_n_rows[test_first_n_rows.status.isin(bad_statuses)].shape[0]
         result = str(round(100 * n_bad / self.params.N_TEST_BAD, 2))
         threshold = str(round(test.probability.values[n_rows - 1], 6))
-        return result, threshold
+        return float(result), float(threshold)
 
     def get_amount_3ds(self, percent: int)-> (float, float):
         test = self.get_convert_test()
