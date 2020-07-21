@@ -18,7 +18,7 @@ class HelperAnalyzer:
         test.amount = pd.to_numeric(test.amount, errors="coerce")
         self.AMOUNT_TEST = sum(test.amount)
 
-        test.cum_amount = test.amount.cumsum()
+        test["cum_amount"] = test.amount.cumsum()
 
         test_bad = test[test.status.isin(bad_statuses)]
         self.N_TEST_BAD = test_bad.shape[0]

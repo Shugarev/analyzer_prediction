@@ -35,12 +35,25 @@ ROW = {'amount_test': 711.04999999999995, 'amount_test_bad': 330.41000000000003
        , 'description': 'Test1', 'n_teach': 10, 'n_teach_bad': 4, 'n_test': 10, 'n_test_bad': 4
        , 'n_test_bad_in_wl': 6, 'n_test_in_wl': 4, 'n_white_list': 3}
 
-RESULT_DF = {'description': ["Test1", "threshold count"],'p_1': [0.0, 0.0],'p_2': [0.0, 0.0], 'p_3': [0.0, 0.0]
-            , 'p_4': [0.0, 0.0], 'p_5': [0.0, 0.0], 'p_6': [25.00, 0.96], 'p_7': [25.00, 0.96]
-            , 'p_10': [25.00, 0.96], 'p_20': [50.00, 0.76], 'rating': [15, 0.0], 'n_white_list': [3, 3]
-            , 'n_test_in_wl': [4, 4], 'n_test_bad_in_wl': [6, 6], 'amount_test_in_wl': [303.33, 303.33]
-            , 'amount_test_bad_in_wl': [589.26, 589.26], 'n_teach': [10, 10], 'n_teach_bad': [4, 4], 'n_test': [10, 10]
-            , 'n_test_bad': [4, 4], 'amount_test_bad': [330.41, 330.41], 'amount_test': [711.05, 711.05]}
+DB_TEST = {'id': {0: '427082******7013_2023-03', 8: '406032******1745_2021-07', 5: '483316******8724_2021-03'
+    , 6: '483316******8724_2021-03', 4: '407204******7425_2020-12', 7: '406032******1745_2021-07'
+    , 1: '414720******4963_2019-11', 2: '434769******7655_2021-10', 3: '434769******7655_2021-10'
+    , 9: '441103******6134_2021-07'}, 'status': {0: 1, 8: 1, 5: 0, 6: 0, 4: 0, 7: 0, 1: 0, 2: 1, 3: 1, 9: 0}
+    , 'amount': {0: 264.75, 8: 21.18, 5: 26.48, 6: 31.77, 4: 42.36, 7: 21.18, 1: 205.9, 2: 22.24, 3: 22.24, 9: 52.95}
+    , 'probability': {0: 0.96, 8: 0.76, 5: 0.74, 6: 0.51, 4: 0.48, 7: 0.21, 1: 0.0, 2: 0.0, 3: 0.0, 9: 0.0}
+    , 'cum_amount': {0: 264.75, 8: 285.93, 5: 312.41, 6: 344.18, 4: 386.54, 7: 407.72, 1: 613.62, 2: 635.86, 3: 658.1
+    , 9: 711.0500000000001}}
+
+
+
+RESULT_DF_DICT = {'description': {0: 'Test1', 1: 'threshold count'}, 'p_1': {0: 0.0, 1: 0.0}, 'p_2': {0: 0.0, 1: 0.0}
+    , 'p_3': {0: 0.0, 1: 0.0}, 'p_4': {0: 0.0, 1: 0.0}, 'p_5': {0: 0.0, 1: 0.0}, 'p_6': {0: 25.0, 1: 0.96}
+    , 'p_7': {0: 25.0, 1: 0.96}, 'p_10': {0: 25.0, 1: 0.96}, 'p_20': {0: 50.0, 1: 0.76}, 'rating': {0: 0.0, 1: 0.0}
+    , 'n_white_list': {0: 3, 1: 3}, 'n_test_in_wl': {0: 4, 1: 4}, 'n_test_bad_in_wl': {0: 6, 1: 6}
+    , 'amount_test_in_wl': {0: 303.33000000000004, 1: 303.33000000000004}
+    , 'amount_test_bad_in_wl': {0: 589.26, 1: 589.26}, 'n_teach': {0: 10, 1: 10}, 'n_teach_bad': {0: 4, 1: 4}
+    , 'n_test': {0: 10, 1: 10}, 'n_test_bad': {0: 4, 1: 4}, 'amount_test_bad': {0: 330.41, 1: 330.41}
+    , 'amount_test': {0: 711.05, 1: 711.05}}
 
 
 class WhiteTestCase(unittest.TestCase):
@@ -102,12 +115,15 @@ class WhiteTestCase(unittest.TestCase):
 
     def test_get_convert_test(self):
         test = self.anylyzer.get_convert_test()
-        self.assertCountEqual(test, db_test, 'incorrect data set')
+        test_df_dict = test.to_dict()
+        print(test_df_dict)
+        self.assertDictEqual(test_df_dict, DB_TEST, 'incorrect data set')
 
     def test_get_table_prediction(self):
         description = "Test1"
-        # result_df = self.anylyzer.get_table_prediction(description)
-        # self.assertDictEqual(dict(result_df), RESULT_DF, 'incorrect default columns or data')
+        result_df = self.anylyzer.get_table_prediction(description)
+        result_df_dict = result_df.to_dict()
+        self.assertDictEqual(result_df_dict, RESULT_DF_DICT, 'incorrect default columns or data')
 
 
 
