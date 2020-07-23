@@ -30,7 +30,7 @@ class UtilsKy:
 
 
     GRAFANA_OPERATIONS = '/mnt/files/workdata/work/merchants/merchant_31_data_for_grafana/02_pure_data/' \
-                         'grafana-operations.csv'
+                         'operations_with_am_usd.csv'
 
 
 class Statistic:
