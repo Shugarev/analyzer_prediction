@@ -1,4 +1,6 @@
 import pandas as pd
+import numpy as np
+from collections import Counter
 
 
 class UtilsKy:
@@ -28,7 +30,6 @@ class UtilsKy:
     DB_TEACH_KY9_FOR_PROD = PATH_DATA_KY9_FOR_PROD + 'db_teach_for_prod_ky9_2018-12-19_2020-04-02.csv'
     DB_TEST_KY9_FOR_PROD = PATH_DATA_KY9_FOR_PROD + 'db_test_for_prod_ky9_2020-04-02_2020-05-12.csv'
 
-
     GRAFANA_OPERATIONS = '/mnt/files/workdata/work/merchants/merchant_31_data_for_grafana/02_pure_data/' \
                          'operations_with_am_usd.csv'
 
@@ -47,4 +48,62 @@ class Statistic:
         dt.amount = pd.to_numeric(dt.amount, errors="coerce")
         amount_dt = sum(dt.amount)
         amount_dt_bad = sum(dt[dt.status.isin(Statistic.BAD_STATUSES)].amount)
-        return round(100 * amount_dt_bad / amount_dt, 2)
+        result = round(100 * amount_dt_bad / amount_dt, 2)
+        return result
+
+    @classmethod
+    def get_table(cls, dt, col_name):
+        return Counter(dt[col_name])
+
+    @classmethod
+    def get_table_value_counts(cls, dt, col_name):
+        return dt[col_name].value_counts()
+
+    @classmethod
+    def get_table_size(cls, dt, col_name):
+        return dt.groupby(col_name).size()
+
+    @classmethod
+    def get_table_crosstab(cls, dt, index_name, col_name):
+        return pd.crosstab(index=dt[index_name], columns=dt[col_name], margins=True)  # с итогами
+
+    @classmethod
+    def stat_summarise_by_column(cls, dt: pd.DataFrame, col: str):
+        dt.amount = pd.to_numeric(dt.amount, errors="coerce")
+        dt['amount_cb'] = np.where(dt.status.isin(Statistic.BAD_STATUSES), dt.amount, 0)
+
+        dt_bad = dt[dt.status.isin(Statistic.BAD_STATUSES)]
+        dt_good = dt[~dt.status.isin(Statistic.BAD_STATUSES)]
+
+        mean_dt_bad = dt_bad.amount.mean()/20
+        mean_dt_good = dt_good.amount.mean()/20
+
+        all_bad_amount = sum(dt_bad.amount)
+        all_good_amount = sum(dt_good.amount)
+
+        all_bad = dt_bad.shape[0]
+        all_good = dt_good.shape[0]
+
+        dt['is_status_bad'] = np.where(dt.status.isin(Statistic.BAD_STATUSES), 1, 0)
+
+        stat_dt = dt.groupby(col).agg({'amount': ['count', 'sum'], 'is_status_bad': ['sum']
+                                      , 'amount_cb': 'sum'  # ,'date':['min', 'max']
+                                     })
+        stat_dt.columns = ['n', 'amount_total', 'n_bad', 'amount_bad']  # ,'min_date', 'max_date'
+        stat_dt['cb_rate'] = round(100 * stat_dt.n_bad / stat_dt.n, 4)
+        stat_dt['cb_rate_amount'] = round(100 * stat_dt.amount_bad / stat_dt.amount_total, 4)
+
+        stat_dt['true_amount_weight'] = (stat_dt.amount_bad + mean_dt_bad)/(all_bad_amount + mean_dt_bad)
+        stat_dt['false_amount_weight'] = (stat_dt.amount_total - stat_dt.amount_bad + mean_dt_good)/(all_good_amount +
+                                                                                                     mean_dt_good)
+        stat_dt['true_weight'] = (stat_dt.n_bad + 1)/(all_bad + 1)
+        stat_dt['false_weight'] = (stat_dt.n - stat_dt.n_bad + 1)/(all_good + 1)
+
+        stat_dt['p'] = np.where(stat_dt.n_bad > 0, stat_dt.true_weight/(stat_dt.true_weight + stat_dt.false_weight), 0)
+        stat_dt['p_a'] = np.where(stat_dt.n_bad > 0, stat_dt.true_amount_weight / (stat_dt.true_amount_weight +
+                                                                                   stat_dt.false_amount_weight), 0)
+        return stat_dt
+
+
+
+

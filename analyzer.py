@@ -45,10 +45,12 @@ class AnalyzerPrediction:
         self.test = test
         self.params = HelperAnalyzer(teach, test, white_list)
 
-
     @classmethod
-    def get_rating(cls, row: dict)->float:
-        return float(row["p_1"]) + float(row["p_2"]) + float(row["p_3"]) + float(row["p_4"]) + float(row["p_5"])
+    def get_rating(cls, row: dict):
+        result = float(row["p_1"]) + float(row["p_2"]) + float(row["p_3"]) + \
+                 float(row["p_4"]) + float(row["p_5"]) + float(row["p_10"]) + \
+                 float(row["p_20"])
+        return result
 
     @classmethod
     def get_empty_white_list(cls)-> pd.DataFrame:
