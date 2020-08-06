@@ -4,28 +4,33 @@ import pandas as pd
 from analyzer import AnalyzerPrediction
 from utils import Statistic
 
-d = {
-    'id': ["427082******7013_2023-03", "414720******4963_2019-11", "434769******7655_2021-10"
-        , "434769******7655_2021-10", "407204******7425_2020-12", "483316******8724_2021-03", "483316******8724_2021-03"
-        , "406032******1745_2021-07", "406032******1745_2021-07", "441103******6134_2021-07"]
+w = {"ID": ["414720******4963_2019-11", "441103******6134_2021-07", "434769******7655_2021-10"]}
+white = pd.DataFrame(data=w)
+
+d = {'id': ["427082******7013_2023-03", "414720******4963_2019-11", "434769******7655_2021-10"
+    , "434769******7655_2021-10", "407204******7425_2020-12", "483316******8724_2021-03", "483316******8724_2021-03"
+    , "406032******1745_2021-07", "406032******1745_2021-07", "441103******6134_2021-07"]
     , 'status': [1, 0, 1, 1, 0, 0, 0, 0, 1, 0]
     , 'amount': ["264.75", "205.90", "22.24", "22.24", "42.36", "26.48", "31.77", "21.18", "21.18", "52.95"]
     , 'bin': ['510250', '510211', '510250', '510211', '510250', '510211', '510260', '510260', '510260', '510260']
 }
-
-db_teach = pd.DataFrame(data=d)
-
 probability = [0.96, 0.83, 0.24, 0.37, 0.48, 0.74, 0.51, 0.21, 0.76, 0.61]
 
 d['probability'] = probability
+
+date = ['2019-11-20 09:39:36', '2019-11-21 10:39:36', '2019-11-27 03:49:36', '2019-11-29 19:39:36',
+        '2019-12-02 09:39:36', '2019-12-07 23:39:36', '2019-12-17 11:39:36', '2019-12-23 09:39:36',
+        '2019-12-24 08:39:36', '2019-12-25 14:39:36']
+
+db_teach = pd.DataFrame(data=d)
+
+db_teach_with_date = db_teach.copy()
+db_teach_with_date['date'] = date
 
 db_test = pd.DataFrame(data=d.copy())
 db_test["probability"] = pd.to_numeric(db_test["probability"], errors="coerce")
 db_test["amount"] = pd.to_numeric(db_test.amount, errors="coerce")
 
-w = {"ID": ["414720******4963_2019-11", "441103******6134_2021-07", "434769******7655_2021-10"]}
-
-white = pd.DataFrame(data=w)
 
 COL_NAMES = ['description', 'p_1', 'p_2', 'p_3', 'p_4', 'p_5', 'p_6', 'p_7', 'p_10', 'p_20', 'rating'
     , 'n_white_list', 'n_test_in_wl', 'n_test_bad_in_wl', 'amount_test_in_wl', 'amount_test_bad_in_wl'
@@ -73,10 +78,19 @@ STAT_DT = {'n': {'510211': 3, '510250': 3, '510260': 4},
            'p': {'510211': 0.48275862068965525, '510250': 0.6774193548387096, '510260': 0.411764705882353},
            'p_a': {'510211': 0.11381978854855095, '510250': 0.8800302473441175, '510260': 0.2102519031056441}}
 
+STAT_DT_WITH_DATE = STAT_DT.copy()
+
+min_date = {'510211': '2019-11-21 10:39:36', '510250': '2019-11-20 09:39:36', '510260': '2019-12-17 11:39:36'}
+max_date = {'510211': '2019-12-07 23:39:36', '510250': '2019-12-02 09:39:36', '510260': '2019-12-25 14:39:36'}
+
+STAT_DT_WITH_DATE['min'] = min_date
+STAT_DT_WITH_DATE['max'] = max_date
+
 
 class WhiteTestCase(unittest.TestCase):
     def setUp(self):
         self.db_teach = db_teach
+        self.db_teach_with_date = db_teach_with_date
         self.db_test = db_test
         self.white = white
         self.anylyzer = AnalyzerPrediction(db_teach, db_test, white)
@@ -143,6 +157,11 @@ class WhiteTestCase(unittest.TestCase):
         self.assertDictEqual(result_df_dict, RESULT_DF_DICT, 'incorrect default columns or data')
 
     def test_stat_summarise_by_column(self):
-        result_df = self.statistic.stat_summarise_by_column(db_teach, 'bin')
+        result_df = self.statistic.get_stat_summarise_by_column(db_teach, 'bin')
         result_df_dict = result_df.to_dict()
         self.assertDictEqual(result_df_dict, STAT_DT, 'incorrect default data')
+
+    def test_stat_summarise_by_column_with_date(self, date_to_summarise=True):
+        result_df = self.statistic.get_stat_summarise_by_column(db_teach_with_date, 'bin', date_to_summarise)
+        result_df_dict = result_df.to_dict()
+        self.assertDictEqual(result_df_dict, STAT_DT_WITH_DATE, 'incorrect default data')

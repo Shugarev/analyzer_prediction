@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import random
 from collections import Counter
 
 
@@ -38,42 +39,53 @@ class Statistic:
     BAD_STATUSES = (1, '1', 'true')
 
     @classmethod
-    def get_cb_rate(cls, dt) -> float:
+    def is_status_bad(cls, dt: pd.DataFrame) -> pd.Series:
+        return dt.status.isin(Statistic.BAD_STATUSES)
+
+    @classmethod
+    def get_dt_good(cls, dt: pd.DataFrame) -> pd.DataFrame:
+        return dt[~cls.is_status_bad(dt)]
+
+    @classmethod
+    def get_dt_bad(cls, dt: pd.DataFrame) -> pd.DataFrame:
+        return dt[dt.status.isin(Statistic.BAD_STATUSES)]
+
+    @classmethod
+    def get_cb_rate(cls, dt: pd.DataFrame) -> float:
         n = dt.shape[0]
-        n_bad = dt[dt.status.isin(Statistic.BAD_STATUSES)].shape[0]
+        n_bad = dt_bad.shape[0]
         return round(100 * n_bad / n, 2)
 
     @classmethod
-    def get_cb_rate_amount(cls, dt) -> float:
+    def get_cb_rate_amount(cls, dt: pd.DataFrame) -> float:
         dt.amount = pd.to_numeric(dt.amount, errors="coerce")
         amount_dt = sum(dt.amount)
-        amount_dt_bad = sum(dt[dt.status.isin(Statistic.BAD_STATUSES)].amount)
+        amount_dt_bad = sum(dt_bad.amount)
         result = round(100 * amount_dt_bad / amount_dt, 2)
         return result
 
     @classmethod
-    def get_table(cls, dt, col_name):
+    def get_table(cls, dt: pd.DataFrame, col_name: str) -> pd.DataFrame:
         return Counter(dt[col_name])
 
     @classmethod
-    def get_table_value_counts(cls, dt, col_name):
+    def get_table_value_counts(cls, dt: pd.DataFrame, col_name: str) -> pd.DataFrame:
         return dt[col_name].value_counts()
 
     @classmethod
-    def get_table_size(cls, dt, col_name):
+    def get_table_size(cls, dt: pd.DataFrame, col_name: str) -> pd.DataFrame:
         return dt.groupby(col_name).size()
 
     @classmethod
-    def get_table_crosstab(cls, dt, index_name, col_name):
+    def get_table_crosstab(cls, dt: pd.DataFrame, index_name: str, col_name: str) -> pd.DataFrame:
         return pd.crosstab(index=dt[index_name], columns=dt[col_name], margins=True)  # с итогами
 
     @classmethod
-    def stat_summarise_by_column(cls, dt: pd.DataFrame, col: str):
+    def get_stat_summarise_by_column(cls, dt: pd.DataFrame, col_name: str, date_to_summarise=False) -> pd.DataFrame:
         dt.amount = pd.to_numeric(dt.amount, errors="coerce")
-        dt['amount_cb'] = np.where(dt.status.isin(Statistic.BAD_STATUSES), dt.amount, 0)
-
-        dt_bad = dt[dt.status.isin(Statistic.BAD_STATUSES)]
-        dt_good = dt[~dt.status.isin(Statistic.BAD_STATUSES)]
+        dt['amount_cb'] = np.where(cls.is_status_bad(dt), dt.amount, 0)
+        dt_bad = cls.get_dt_bad(dt)
+        dt_good = cls.get_dt_good(dt)
 
         mean_dt_bad = dt_bad.amount.mean()/20
         mean_dt_good = dt_good.amount.mean()/20
@@ -84,12 +96,18 @@ class Statistic:
         all_bad = dt_bad.shape[0]
         all_good = dt_good.shape[0]
 
-        dt['is_status_bad'] = np.where(dt.status.isin(Statistic.BAD_STATUSES), 1, 0)
+        dt['is_status_bad'] = np.where(cls.is_status_bad(dt), 1, 0)
 
-        stat_dt = dt.groupby(col).agg({'amount': ['count', 'sum'], 'is_status_bad': ['sum']
-                                      , 'amount_cb': 'sum'  # ,'date':['min', 'max']
-                                     })
-        stat_dt.columns = ['n', 'amount_total', 'n_bad', 'amount_bad']  # ,'min_date', 'max_date'
+        data = {'amount': ['count', 'sum'], 'is_status_bad': 'sum', 'amount_cb': 'sum'}
+
+        col_names_agg = ['n', 'amount_total', 'n_bad', 'amount_bad']
+
+        if date_to_summarise:
+            data['date'] = ['min', 'max']
+            col_names_agg = col_names_agg + ['min', 'max']
+
+        stat_dt = dt.groupby(col_name).agg(data)
+        stat_dt.columns = col_names_agg
         stat_dt['cb_rate'] = round(100 * stat_dt.n_bad / stat_dt.n, 4)
         stat_dt['cb_rate_amount'] = round(100 * stat_dt.amount_bad / stat_dt.amount_total, 4)
 
@@ -104,6 +122,9 @@ class Statistic:
                                                                                    stat_dt.false_amount_weight), 0)
         return stat_dt
 
-
-
-
+    @classmethod
+    def add_random_list_column(cls, dt: pd.DataFrame, count_class=3) -> pd.DataFrame:
+        random.seed(123)
+        n = dt.shape[0]
+        dt['random_list'] = random.sample(list(range(1, count_class + 1)) * n, n)
+        return dt

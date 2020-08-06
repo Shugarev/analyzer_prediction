@@ -1,18 +1,17 @@
 import numpy as np
 import pandas as pd
+from utils import Statistic
 
 
 class HelperAnalyzer:
 
-    BAD_STATUSES = (1, '1', 'true')
-
     def __init__(self, teach: pd.DataFrame, test: pd.DataFrame, white_list=None):
 
-        bad_statuses = HelperAnalyzer.BAD_STATUSES
+        bad_statuses = Statistic.BAD_STATUSES
         self.N_WHITE_LIST = white_list.shape[0]
 
         self.N_TEACH = teach.shape[0]
-        self.N_TEACH_BAD = teach[teach.status.isin(bad_statuses)].shape[0]
+        self.N_TEACH_BAD = Statistic.get_dt_bad(teach).shape[0]
 
         self.N_TEST = test.shape[0]
         test.amount = pd.to_numeric(test.amount, errors="coerce")
@@ -20,7 +19,7 @@ class HelperAnalyzer:
 
         test["cum_amount"] = test.amount.cumsum()
 
-        test_bad = test[test.status.isin(bad_statuses)]
+        test_bad =  Statistic.get_dt_bad(test)
         self.N_TEST_BAD = test_bad.shape[0]
         self.AMOUNT_TEST_BAD = sum(test_bad.amount)
 
@@ -79,30 +78,27 @@ class AnalyzerPrediction:
         return result_df
 
     def get_xgb_weight(self) -> pd.Series:
-        bad_statuses = HelperAnalyzer.BAD_STATUSES
         teach = self.teach
         n_sample = teach.shape[0]
-        n_bad = teach[teach.status.isin(bad_statuses)].shape[0]
+        n_bad = Statistic.get_dt_bad(teach).shape[0]
         w = int(n_sample / n_bad)
         teach["amount"] = pd.to_numeric(teach.amount, errors="coerce")
-        weight = np.where(teach.status.isin(bad_statuses), w, 1)
+        weight = np.where(Statistic.is_status_bad(teach), w, 1)
         return weight
 
     def get_count_3ds(self, percent: int)-> (float, float):
         test = self.get_convert_test()
-        bad_statuses = HelperAnalyzer.BAD_STATUSES
         n_rows = round(self.params.N_TEST * percent / 100)
         test_first_n_rows = test.iloc[:n_rows, :]
-        n_bad = test_first_n_rows[test_first_n_rows.status.isin(bad_statuses)].shape[0]
+        n_bad = Statistic.get_dt_bad(test_first_n_rows).shape[0]
         result = str(round(100 * n_bad / self.params.N_TEST_BAD, 2))
         threshold = str(round(test.probability.values[n_rows - 1], 6))
         return float(result), float(threshold)
 
     def get_amount_3ds(self, percent: int)-> (float, float):
         test = self.get_convert_test()
-        bad_statuses = HelperAnalyzer.BAD_STATUSES
         test_first_cumsum_rows = test[test.cum_amount < percent * self.params.AMOUNT_TEST / 100]
-        amount_bad = sum(test_first_cumsum_rows[test_first_cumsum_rows.status.isin(bad_statuses)].amount)
+        amount_bad = sum( Statistic.get_dt_bad(test_first_cumsum_rows).amount)
         result = str(round(100 * amount_bad / self.params.AMOUNT_TEST_BAD, 2))
         n_rows = test_first_cumsum_rows.shape[0]
         threshold = str(round(test.probability.values[n_rows - 1], 6))
