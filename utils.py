@@ -128,3 +128,22 @@ class Statistic:
         n = dt.shape[0]
         dt['random_list'] = random.sample(list(range(1, count_class + 1)) * n, n)
         return dt
+
+    @classmethod
+    def get_correlation_summarise(cls, dt_1: pd.DataFrame, dt_2: pd.DataFrame, factor_name: str
+                                        , col_names=['p_x', 'p_y'], method='kendall') -> pd.DataFrame:
+        st_1 = cls.get_stat_summarise_by_column(dt_1, factor_name)
+        st_2 = cls.get_stat_summarise_by_column(dt_2, factor_name)
+        all_st = pd.merge(st_1, st_2, how='left', on=[factor_name])
+        return all_st[col_names].corr(method)
+
+    @classmethod
+    def get_correlation_summarise_all_factors(cls, dt_1: pd.DataFrame, dt_2: pd.DataFrame) -> pd.DataFrame:
+        result_df = pd.DataFrame(columns=['name', 'value'])
+        col_list = dt_1.columns[dt_1.columns.isin(dt_2)]
+        for col in col_list:
+            st = Statistic.get_correlation_summarise(dt_1, dt_2, col)
+            row = {"name": col, "value": st.iloc[0, 1]}
+            result_df = result_df.append(row, ignore_index=True)
+        return result_df
+

@@ -98,7 +98,7 @@ class AnalyzerPrediction:
     def get_amount_3ds(self, percent: int)-> (float, float):
         test = self.get_convert_test()
         test_first_cumsum_rows = test[test.cum_amount < percent * self.params.AMOUNT_TEST / 100]
-        amount_bad = sum( Statistic.get_dt_bad(test_first_cumsum_rows).amount)
+        amount_bad = sum(Statistic.get_dt_bad(test_first_cumsum_rows).amount)
         result = str(round(100 * amount_bad / self.params.AMOUNT_TEST_BAD, 2))
         n_rows = test_first_cumsum_rows.shape[0]
         threshold = str(round(test.probability.values[n_rows - 1], 6))
