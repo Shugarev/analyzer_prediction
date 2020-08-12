@@ -1,5 +1,7 @@
 import pandas as pd
+import numpy as np
 import re
+from utils import Statistic
 
 
 def is_only_digit(x):
@@ -12,6 +14,10 @@ def encode_length(x, encode):
         return encode['unknown']
     len_x = str(len(x))
     return encode[len_x] if len_x in encode.keys() else encode['other']
+
+
+def get_network(x):
+    return re.sub('\\.\\d+$', '', x)
 
 
 class Factor:
@@ -46,3 +52,24 @@ class Factor:
 
         return dt[col_name].apply(lambda x: encode_length(x, encode))
 
+    @classmethod
+    def get_network(cls, dt: pd.DataFrame, col_name='ip') -> pd.Series:
+        return dt[col_name].apply(lambda x: get_network(x))
+
+    @classmethod
+    def is_net_frequency(cls, teach: pd.DataFrame,  test: pd.DataFrame, threshold=10, col_name='ip'):
+        teach['network'] = cls.get_network(teach)
+        test['network'] = cls.get_network(test)
+
+        s_network = Statistic.get_table_size(teach, 'network')
+        net = list(s_network.index)
+        net_n = list(s_network.values)
+        dt = pd.DataFrame({'network': net, 'count_net': net_n})
+        dt_freq = dt[dt.count_net > threshold]
+        net_frequency = dt_freq.network.unique()
+
+        teach['is_fr_net'] = np.where(teach.network.isin(net_frequency), 1, 0)
+        test['is_fr_net'] = np.where(test.network.isin(net_frequency), 1, 0)
+        teach.drop('network',  axis=1)
+        test.drop('network', axis=1)
+        return teach.is_fr_net, test.is_fr_net

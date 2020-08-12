@@ -19,7 +19,7 @@ class HelperAnalyzer:
 
         test["cum_amount"] = test.amount.cumsum()
 
-        test_bad =  Statistic.get_dt_bad(test)
+        test_bad = Statistic.get_dt_bad(test)
         self.N_TEST_BAD = test_bad.shape[0]
         self.AMOUNT_TEST_BAD = sum(test_bad.amount)
 

@@ -65,19 +65,23 @@ class Statistic:
         return result
 
     @classmethod
-    def get_table(cls, dt: pd.DataFrame, col_name: str) -> pd.DataFrame:
+    def get_table(cls, dt: pd.DataFrame, col_name: str) -> Counter:
         return Counter(dt[col_name])
 
     @classmethod
-    def get_table_value_counts(cls, dt: pd.DataFrame, col_name: str) -> pd.DataFrame:
+    def get_table_value_counts(cls, dt: pd.DataFrame, col_name: str) -> pd.core.series.Series:
         return dt[col_name].value_counts()
 
     @classmethod
-    def get_table_size(cls, dt: pd.DataFrame, col_name: str) -> pd.DataFrame:
+    def get_table_size(cls, dt: pd.DataFrame, col_name: str) -> pd.core.series.Series:
         return dt.groupby(col_name).size()
 
     @classmethod
-    def get_table_crosstab(cls, dt: pd.DataFrame, index_name: str, col_name: str) -> pd.DataFrame:
+    def get_table_agg(cls, dt: pd.DataFrame, col_name: str) -> pd.core.series.Series:
+        return dt.groupby(col_name).agg(count)
+
+    @classmethod
+    def get_table_crosstab(cls, dt: pd.DataFrame, index_name: str, col_name: str) -> pd.core.frame.DataFrame:
         return pd.crosstab(index=dt[index_name], columns=dt[col_name], margins=True)  # с итогами
 
     @classmethod
