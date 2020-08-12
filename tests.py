@@ -3,6 +3,7 @@ import pandas as pd
 
 from analyzer import AnalyzerPrediction
 from utils import Statistic
+from factors import Factor
 
 w = {"ID": ["414720******4963_2019-11", "441103******6134_2021-07", "434769******7655_2021-10"]}
 white = pd.DataFrame(data=w)
@@ -13,7 +14,7 @@ d = {'id': ["427082******7013_2023-03", "414720******4963_2019-11", "434769*****
     , 'status': [1, 0, 1, 1, 0, 0, 0, 0, 1, 0]
     , 'amount': ["264.75", "205.90", "22.24", "22.24", "42.36", "26.48", "31.77", "21.18", "21.18", "52.95"]
     , 'bin': ['510250', '510211', '510250', '510211', '510250', '510211', '510260', '510260', '510260', '510260']
-}
+     }
 probability = [0.96, 0.83, 0.24, 0.37, 0.48, 0.74, 0.51, 0.21, 0.76, 0.61]
 
 d['probability'] = probability
@@ -30,7 +31,6 @@ db_teach_with_date['date'] = date
 db_test = pd.DataFrame(data=d.copy())
 db_test["probability"] = pd.to_numeric(db_test["probability"], errors="coerce")
 db_test["amount"] = pd.to_numeric(db_test.amount, errors="coerce")
-
 
 COL_NAMES = ['description', 'p_1', 'p_2', 'p_3', 'p_4', 'p_5', 'p_6', 'p_7', 'p_10', 'p_20', 'rating'
     , 'n_white_list', 'n_test_in_wl', 'n_test_bad_in_wl', 'amount_test_in_wl', 'amount_test_bad_in_wl'
@@ -165,3 +165,35 @@ class WhiteTestCase(unittest.TestCase):
         result_df = self.statistic.get_stat_summarise_by_column(db_teach_with_date, 'bin', date_to_summarise)
         result_df_dict = result_df.to_dict()
         self.assertDictEqual(result_df_dict, STAT_DT_WITH_DATE, 'incorrect default data')
+
+
+data = {'zip': ['56789', '96746', '45x01', '21540590', '1121D', '57075440', 'Rm4606', '020-72', '33015', '32514']
+    , 'phone': ['1356789364528', '1086510074', '1002929855', '11994891341', '977852230', '', '7183741', '83292591',
+                '1065951413', '128298821232']}
+db_teach_for_factors = pd.DataFrame(data=data)
+
+
+class FactorTestCase(unittest.TestCase):
+    def setUp(self):
+        self.factor = Factor()
+        self.db_teach = db_teach_for_factors
+
+    def test_get_is_zip_digit(self):
+        result = self.factor.is_only_digit(self.db_teach)
+        result = result.to_list()
+        self.assertListEqual(result, [1, 1, 0, 1, 0, 1, 0, 0, 1, 1], 'incorrect default data')
+
+    def test_get_encode_length(self):
+        result = self.factor.encode_length(self.db_teach, encode={'unknown': 0,'other': 0, '10': 1})
+        result = result.to_list()
+        self.assertListEqual(result, [0, 1, 1, 0, 0, 0, 0, 0, 1, 0], 'incorrect default data')
+
+    def test_get_encode_length_2(self):
+        result = self.factor.encode_length(self.db_teach, encode={'unknown': 3, 'other': 0, '10': 1})
+        result = result.to_list()
+        self.assertListEqual(result, [0, 1, 1, 0, 0, 3, 0, 0, 1, 0], 'incorrect default data')
+
+    def test_get_encode_length_3(self):
+        result = self.factor.encode_length(self.db_teach, encode={'unknown': 3, 'other': 5, '10': 0})
+        result = result.to_list()
+        self.assertListEqual(result, [5, 0, 0, 5, 5, 3, 5, 5, 0, 5], 'incorrect default data')
