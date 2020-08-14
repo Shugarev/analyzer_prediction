@@ -169,7 +169,9 @@ class WhiteTestCase(unittest.TestCase):
 
 data = {'zip': ['56789', '96746', '45x01', '21540590', '1121D', '57075440', 'Rm4606', '020-72', '33015', '32514']
     , 'phone': ['1356789364528', '1086510074', '1002929855', '11994891341', '977852230', '', '7183741', '83292591',
-                '1065951413', '128298821232']}
+                '1065951413', '128298821232']
+    , 'ip': []
+        }
 db_teach_for_factors = pd.DataFrame(data=data)
 
 
@@ -195,5 +197,10 @@ class FactorTestCase(unittest.TestCase):
 
     def test_get_encode_length_3(self):
         result = self.factor.encode_length(self.db_teach, encode={'unknown': 3, 'other': 5, '10': 0})
+        result = result.to_list()
+        self.assertListEqual(result, [5, 0, 0, 5, 5, 3, 5, 5, 0, 5], 'incorrect default data')
+
+    def test_get_network(self):
+        result = self.factor.get_network(self.db_teach)
         result = result.to_list()
         self.assertListEqual(result, [5, 0, 0, 5, 5, 3, 5, 5, 0, 5], 'incorrect default data')

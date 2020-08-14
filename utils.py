@@ -78,7 +78,9 @@ class Statistic:
 
     @classmethod
     def get_table_agg(cls, dt: pd.DataFrame, col_name: str) -> pd.core.series.Series:
-        return dt.groupby(col_name).agg(count)
+        dt_agg = dt.groupby(col_name).agg({col_name: "count"})
+        dt_agg.columns = ['n_' + col_name]
+        return dt_agg
 
     @classmethod
     def get_table_crosstab(cls, dt: pd.DataFrame, index_name: str, col_name: str) -> pd.core.frame.DataFrame:
