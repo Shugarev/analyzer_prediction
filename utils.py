@@ -129,15 +129,14 @@ class Statistic:
         return stat_dt
 
     @classmethod
-    def add_random_list_column(cls, dt: pd.DataFrame, count_class=3) -> pd.DataFrame:
+    def add_random_list_column(cls, dt: pd.DataFrame, count_class=3) -> pd.Series:
         random.seed(123)
         n = dt.shape[0]
-        dt['random_list'] = random.sample(list(range(1, count_class + 1)) * n, n)
-        return dt
+        return random.sample(list(range(1, count_class + 1)) * n, n)
 
     @classmethod
     def get_correlation_summarise(cls, dt_1: pd.DataFrame, dt_2: pd.DataFrame, factor_name: str
-                                        , col_names=['p_x', 'p_y'], method='kendall') -> pd.DataFrame:
+                                  , col_names=['p_x', 'p_y'], method='kendall') -> pd.DataFrame:
         st_1 = cls.get_stat_summarise_by_column(dt_1, factor_name)
         st_2 = cls.get_stat_summarise_by_column(dt_2, factor_name)
         all_st = pd.merge(st_1, st_2, how='left', on=[factor_name])

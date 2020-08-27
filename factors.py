@@ -4,7 +4,7 @@ import re
 from utils import Statistic
 
 
-def is_only_digit(x:string)->int :
+def is_only_digit(x: str)->int:
     x_char = re.sub('\\d', '', x)
     return 1 if x_char == '' else 0
 
@@ -14,6 +14,12 @@ def encode_length(x: str, encode: dict):
         return encode['unknown']
     len_x = str(len(x))
     return encode[len_x] if len_x in encode.keys() else encode['other']
+
+
+def encoded_map(x: str, encode: dict):
+    if not x:
+        return encode['unknown']
+    return encode[x] if x in encode.keys() else encode['other']
 
 
 def get_network(x):
@@ -29,6 +35,46 @@ def get_local_net(x:str)->str:
     return re.sub('^.+\\.', '', x)
 
 
+def get_bin(x: str)->str:
+    return x[:6]
+
+
+def get_first_name(x: str)->str:
+    x = re.sub("\\s+", " ", str(x))
+    return x.split()[0]
+
+
+def get_last_name(x: str)->str:
+    x = re.sub("\\s+", " ", str(x))
+    return x.split()[1]
+
+
+def get_domain(x: str)->str:
+    return str.split(x, '@')[1]
+
+
+def get_last_domain_zone(x: str)->str:
+    x = str.split(x, '@')[-1]
+    return str.split(x, '.')[-1]
+
+
+def get_count_words_in_column(x: str)->float:
+    x = re.sub("[0-9*.,'-]", " ", str(x))
+    x = re.sub("\\s+", " ", x)
+    x = str.strip(x)
+    return str.count(x, " ") + 1
+
+
+def get_phone_2(x: str)->str:
+    x = re.sub("\\D", "", str(x))
+    return x[:2]
+
+
+def get_phone_3(x: str)->str:
+    x = re.sub("\\D", "", str(x))
+    return x[:3]
+
+
 class Factor:
 
     @classmethod
@@ -36,29 +82,20 @@ class Factor:
         return dt[col_name].apply(lambda x: is_only_digit(x))
 
     @classmethod
+    def encode(cls, dt: pd.DataFrame, col_name='phone', encode={'unknown': 0, 'other': 0, '10': 1}) -> pd.Series:
+        return dt[col_name].apply(lambda x: encoded_map(x, encode))
+
+    @classmethod
     def encode_length(cls, dt: pd.DataFrame, col_name='phone', encode={'unknown': 0,'other': 0, '10': 1}) -> pd.Series:
         """
         Parameters
         ----------
-        dt: pd.DataFrame
-        FOR kyw3
+        dt: pd.DataFrame (FOR kyw3)
         encode={'unknown': 0, - phone field is empty
                  'other': 0,  - all phone numbers different "10"
                  '10': 1      - for number has 10 characters
                  }
-
-        Examples perl code
-        --------
-         hash_def => "m=>0, f=>0, other=>1, unknown=>1";
-         hash_def => " unknown => 1, other => 0"
-         keys other ,unknown are obligatory
-         return
-         $hash_encode{'unknown'} - if key does not exist or key is empty string
-         $hash_encode{'other'}  - if key exists and key is not empty and $hash_encode{key} does not exist
-         example hash_def => "m=>0,  unknown=>2, other=>3"
-         $hash_encode{key} - if exists key and exists $hash_encode{key}
-         """
-
+        """
         return dt[col_name].apply(lambda x: encode_length(x, encode))
 
     @classmethod
@@ -84,3 +121,36 @@ class Factor:
         teach.drop(col_net,  axis=1)
         test.drop(col_net, axis=1)
         return teach.is_fr_net, test.is_fr_net
+
+    @classmethod
+    def get_bin(cls, dt: pd.DataFrame, col_name='card_masked') -> pd.Series:
+        return dt[col_name].apply(lambda x: get_bin(x))
+
+    @classmethod
+    def get_first_name(cls, dt: pd.DataFrame, col_name='card_holder') -> pd.Series:
+        return dt[col_name].apply(lambda x: get_first_name(x))
+
+    @classmethod
+    def get_last_name(cls, dt: pd.DataFrame, col_name='card_holder') -> pd.Series:
+        return dt[col_name].apply(lambda x: get_last_name(x))
+
+    @classmethod
+    def get_domain(cls, dt: pd.DataFrame, col_name='email') -> pd.Series:
+        return dt[col_name].apply(lambda x: get_domain(x))
+
+    @classmethod
+    def get_last_domain_zone(cls, dt: pd.DataFrame, col_name='email') -> pd.Series:
+        return dt[col_name].apply(lambda x: get_last_domain_zone(x))
+
+    @classmethod
+    def get_count_words_in_column(cls, dt: pd.DataFrame, col_name='address') -> pd.Series:
+        return dt[col_name].apply(lambda x: get_count_words_in_column(x))
+
+    @classmethod
+    def get_phone_2(cls, dt: pd.DataFrame, col_name='phone') -> pd.Series:
+        return dt[col_name].apply(lambda x: get_phone_2(x))
+
+    @classmethod
+    def get_phone_3(cls, dt: pd.DataFrame, col_name='phone') -> pd.Series:
+        return dt[col_name].apply(lambda x: get_phone_3(x))
+
