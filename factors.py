@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import re
-from utils import Statistic
+from statistic import Statistic
 
 
 def is_only_digit(x: str)->int:

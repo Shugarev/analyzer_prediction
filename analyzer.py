@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from utils import Statistic
+from statistic import Statistic
 
 
 class HelperAnalyzer:
