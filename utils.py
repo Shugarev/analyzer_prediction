@@ -1,3 +1,30 @@
+
+
+class RegPattern:
+    BACKSLASH_4_DBLQUATER = r'\\\\\\\\"'
+    BACKSLASH_2_DBLQUATER = r'\\\\"'
+    BACKSLASH_2_n = r'\\\\n'
+    BACKSLASH_2_t = r'\\\\t'
+    BACKSLASH_2_b = r'\\\\b'
+    BACKSLASH_2_COMA = r'\\\\,'
+    BACKSLASH_4 = r'\\\\\\\\'
+    DATE_TIME = r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$"
+    ORDER_ID = r"^(\d+)\D"
+    AFTER_LAST_CURL_BRACE = r"}[^}]*$"
+    BEFORE_FIRST_CURL_BRACE = r"^[^{]*{"
+
+    JSON_LINE = '[{](.+)[}]'
+    BACKSLASH_IN_LINE = r'[^"]+\\[^"]+'
+
+    WORD_AFTER_COLON = ':([a-zA-Z]+)'
+    '''
+    example
+    df_correct_line['correct_json'] = df_correct_line.json.apply(lambda x:
+                                    re.sub(RegPattern.WORD_AFTER_COLON, ':"\\1"', str(x)))
+    {"sms_notification":true, "has_rzd_bonus":false} -> {"sms_notification":"true", "has_rzd_bonus":"false"}
+    '''
+
+
 class UtilsKy:
     # kyw3
     PATH_DATA_KYW3 = '/mnt/files/workdata/work/merchants/merchant_33_kyw3_2020-06-05/04_experiments/ex_01_some_teach/'
@@ -27,7 +54,6 @@ class UtilsKy:
 
     GRAFANA_OPERATIONS = '/mnt/files/workdata/work/merchants/merchant_31_data_for_grafana/02_pure_data/' \
                          'operations_with_am_usd.csv'
-
 
 
 

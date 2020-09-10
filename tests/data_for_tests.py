@@ -1,3 +1,4 @@
+import os, inspect
 import pandas as pd
 
 
@@ -106,3 +107,16 @@ class DataForTests:
         }
 
     db_teach_factor = pd.DataFrame(data=data_factor)
+
+    #  ----------------------------------------------------------- For Converter -----------------------------------
+
+    str_for_converter = '{"client":{"phone":"923143****", "email":"aaaaaa49@mail.ru"}}'
+    str_for_converter_2 = '{"order":{"id":"111111111"},"client":{"email":"aaaa@gmail.com"}}'
+    df_converter = pd.DataFrame(data={"json": [str_for_converter, str_for_converter_2]})
+
+    converted_str = {'client': {'phone': '923143****', 'name': 'Наталья Алтынбаева', 'email': 'aa49@mail.ru'}}
+
+    current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+
+    intput_file = current_dir + '/input_json_converter.csv'
+    output_file = current_dir + '/output_json_converter.txt'
