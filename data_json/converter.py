@@ -1,7 +1,6 @@
 import pandas as pd
 import json
 import re
-
 from utils import RegPattern
 
 
@@ -22,9 +21,8 @@ def _get_one_column_from_json(x: str, col_name: str):
 
 
 class Converter:
-
     @classmethod
-    def get_flat_dictionary(cls, item, old_key=None)->dict:
+    def get_flat_dictionary(cls, item, old_key=None) -> dict:
         '''
         :param  item - dict, list or str
                 old_key concatenated key:
@@ -45,13 +43,13 @@ class Converter:
             for value in item:
                 new_key = old_key + '.' + str(key) if old_key is not None else key
                 flat_dic.update(cls.get_flat_dictionary(value, new_key))
-                key = key + 1
+                key += 1
         else:
             flat_dic = {old_key: item}
         return flat_dic
 
     @classmethod
-    def merge_flat_dictionary_keys_from_json_column(cls, dt: pd.DataFrame, col_name: str)->list:
+    def merge_flat_dictionary_keys_from_json_column(cls, dt: pd.DataFrame, col_name: str) -> list:
         '''
         example:
             data_json = [{"client":{"phone":"923143****", "email":"aaaaaa49@mail.ru"}},
@@ -78,9 +76,7 @@ class Converter:
                 print(json_load)
                 flat_dic = {}
 
-            col_names = col_names + list(flat_dic.keys())
-            col_names = set(col_names)
-            col_names = list(col_names)
+            col_names = list(set(col_names + list(flat_dic.keys())))
         return col_names
 
     @classmethod
@@ -97,36 +93,30 @@ class Converter:
         return:
             ['"client.phone","client.email"\n"923143****","aaaaaa49@mail.ru"\n"","aaaa@gmail.com"\n']
         '''
-        fw = open(output_file, 'w')
-        csv_line = '"' + '","'.join(col_names) + '"'
-        fw.write(csv_line + "\n")
+        fw = cls.write_head_to_file(col_names, output_file)
 
         n = dt.shape[0]
         column_values = dt[col_name].tolist()
         full_flat_dic = {str(key): "" for key in col_names}
 
-        default_list = [""] * len(col_names)
-        default_csv_line = '"' + '","'.join(default_list) + '"'
+        default_csv_line = cls.get_default_csv_line(col_names)
 
-        for i in range(n):
-            json_load = column_values[i]
-            try:
-                d = json.loads(json_load)
-                flat_dic = cls.get_flat_dictionary(d)
-                flat_dic = {**full_flat_dic, **flat_dic}
-                col_names_values = [str(flat_dic[col]) for col in col_names]
-                csv_line = '"' + '","'.join(col_names_values) + '"'
-            except:
-                print("col num =" + str(i))
-                print(json_load)
-                csv_line = default_csv_line
-
+        for line_number in range(n):
+            json_load = column_values[line_number]
+            csv_line = cls.get_csv_line_from_json(col_names,  default_csv_line, full_flat_dic, json_load, line_number)
             fw.write(csv_line + "\n")
 
         fw.close()
 
     @classmethod
-    def convert_one_column_from_json(cls, dt, col_json_name, col_name)-> pd.Series:
+    def write_head_to_file(cls, col_names, output_file):
+        fw = open(output_file, 'w')
+        csv_line = '"' + '","'.join(col_names) + '"'
+        fw.write(csv_line + "\n")
+        return fw
+
+    @classmethod
+    def convert_one_column_from_json(cls, dt, col_json_name, col_name) -> pd.Series:
         '''
         example:
             data_json = [{"client":{"phone":"923143****", "email":"aaaaaa49@mail.ru"}},
@@ -162,15 +152,10 @@ class Converter:
             "","aaaaaaaa_aaaaaaa_2018@mail.ru"
             "ЧУП Самелго-Плюс Сак","aaaa@gmail.com"
         '''
-        fw = open(output_file, 'w')
-        csv_line = '"' + '","'.join(col_names) + '"'
-        fw.write(csv_line + "\n")
-
-        default_list = [""] * len(col_names)
-        default_csv_line = '"' + '","'.join(default_list) + '"'
+        fw = cls.write_head_to_file(col_names, output_file)
+        default_csv_line = cls.get_default_csv_line(col_names)
 
         full_flat_dic = {str(key): "" for key in col_names}
-
         problems = []
         problem_lines = []
         problem_nums = []
@@ -183,45 +168,69 @@ class Converter:
                     result = re.search(RegPattern.JSON_LINE, line)
                     if result:
                         json_load = result.group(0)
+                        cls.find_problems_line(json_load, line_number, problem_lines, problem_nums, problems)
 
-                        problem = re.findall(RegPattern.BACKSLASH_IN_LINE, json_load)
-                        if len(problem) > 0:
-                            problems = problems + problem
-                            problem_lines.append(json_load)
-                            problem_nums.append(line_number)
-
-                        # extract method
                         json_load = cls.update_json_by_pattern(json_load)
                         json_load = re.sub(RegPattern.WORD_AFTER_COLON, ':"\\1"', str(json_load))
-                        #  generic code
-                        try:
-                            d = json.loads(json_load)
-                            flat_dic = cls.get_flat_dictionary(d)
-                            flat_dic = {**full_flat_dic, **flat_dic}
-                            col_names_values = [str(flat_dic[col]) for col in col_names]
-                            csv_line = '"' + '","'.join(col_names_values) + '"'
-                        except:
-                            print("col num =" + str(line_number))
-                            print(json_load)
-                            csv_line = default_csv_line
 
+                        csv_line = cls.get_csv_line_from_json(col_names,  default_csv_line, full_flat_dic,
+                                                              json_load, line_number)
                     else:
-
-                        problems.append(problem)
-                        problem_lines += line
-                        problem_nums.append(line_number)
-
-                        csv_line = default_csv_line
-                        print('does not pares json field')
-                        print(line_number)
-                        print(line)
+                        csv_line = cls.not_extracted_json_col_by_regexp(default_csv_line, line, line_number,
+                                                                        problem_lines, problem_nums, problems)
                     fw.write(csv_line + "\n")
 
                 line_number += 1
-
                 line = fr.readline()
 
         return problem_lines, problems, problem_nums
+
+    @classmethod
+    def write_head_to_file(cls, col_names, output_file):
+        fw = open(output_file, 'w')
+        csv_line = '"' + '","'.join(col_names) + '"'
+        fw.write(csv_line + "\n")
+        return fw
+
+    @classmethod
+    def get_default_csv_line(cls, col_names):
+        default_list = [""] * len(col_names)
+        default_csv_line = '"' + '","'.join(default_list) + '"'
+        return default_csv_line
+
+    @classmethod
+    def not_extracted_json_col_by_regexp(cls, default_csv_line, line, line_number, problem_lines,
+                                         problem_nums, problems):
+        problem = 'does not pares json field'
+        problems.append(problem)
+        problem_lines += line
+        problem_nums.append(line_number)
+        print('does not pares json field')
+        print(line_number)
+        print(line)
+        return default_csv_line
+
+    @classmethod
+    def get_csv_line_from_json(cls, col_names,  default_csv_line, full_flat_dic, json_load, line_number):
+        try:
+            d = json.loads(json_load)
+            flat_dic = cls.get_flat_dictionary(d)
+            flat_dic = {**full_flat_dic, **flat_dic}
+            col_names_values = [str(flat_dic[col]) for col in col_names]
+            csv_line = '"' + '","'.join(col_names_values) + '"'
+        except:
+            print("col num =" + str(line_number))
+            print(json_load)
+            csv_line = default_csv_line
+        return csv_line
+
+    @classmethod
+    def find_problems_line(cls, json_load, line_number, problem_lines, problem_nums, problems):
+        problem = re.findall(RegPattern.BACKSLASH_IN_LINE, json_load)
+        if len(problem) > 0:
+            problems += problem
+            problem_lines.append(json_load)
+            problem_nums.append(line_number)
 
     @classmethod
     def update_json_by_pattern(cls, json_load: str) -> str:
@@ -232,5 +241,3 @@ class Converter:
         json_load = re.sub(RegPattern.BACKSLASH_2_DBLQUATER, '', json_load)
         json_load = re.sub(RegPattern.BACKSLASH_2_COMA, ',', json_load)
         return json_load
-
-
