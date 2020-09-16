@@ -116,10 +116,13 @@ class Converter:
 
         default_csv_line = cls.get_default_csv_line(col_names)
 
+        problems = []
+        problem_lines = []
+        problem_nums = []
         for line_number in range(n):
             json_load = column_values[line_number]
             csv_line = cls.get_csv_line_from_json(col_names,  default_csv_line, full_flat_dic, json_load, line_number,
-                                                  is_print_error)
+                                                  problems, problem_lines, problem_nums, is_print_error)
             fw.write(csv_line + "\n")
 
         fw.close()
@@ -215,17 +218,18 @@ class Converter:
                     result = re.search(RegPattern.JSON_LINE, line)
                     if result:
                         json_load = result.group(0)
-                        cls.find_problems_line(json_load, line_number, problem_lines, problem_nums, problems)
+                        cls.find_problems_line(json_load, line_number, problems, problem_lines, problem_nums)
 
                         json_load = cls.update_json_by_pattern(json_load)
 
                         json_load = cls.correct_json_load(json_load)
 
-                        csv_line = cls.get_csv_line_from_json(col_names,  default_csv_line, full_flat_dic,
-                                                              json_load, line_number, is_print_error)
+                        csv_line = cls.get_csv_line_from_json(col_names, default_csv_line, full_flat_dic, json_load
+                                                              , line_number, problems, problem_lines, problem_nums
+                                                              , is_print_error)
                     else:
                         csv_line = cls.not_extracted_json_col_by_regexp(default_csv_line, line, line_number,
-                                                                        problem_lines, problem_nums, problems,
+                                                                        problems, problem_lines, problem_nums,
                                                                         is_print_error)
                     fw.write(csv_line + "\n")
 
@@ -246,8 +250,12 @@ class Converter:
         return default_csv_line
 
     @classmethod
-    def not_extracted_json_col_by_regexp(cls, default_csv_line, line, line_number, problem_lines,
-                                         problem_nums, problems, is_print_error=0):
+    def not_extracted_json_col_by_regexp(cls, default_csv_line, line, line_number, problems,  problem_lines, problem_nums
+                                         , is_print_error):
+        '''
+        if  is_print_error=1 then print line
+        :param line='NULL	Туту ЖД		NULL	2019-06-20 10:25:14'
+        '''
         problem = 'does not pares json field'
         problems.append(problem)
         problem_lines.append(line)
@@ -256,14 +264,24 @@ class Converter:
             print(problem)
             print(line_number)
             print(line)
-        elif not str(line).startswith("NULL") and is_print_error == 2:
-            print(problem)
-            print(line_number)
-            print(line)
         return default_csv_line
 
     @classmethod
-    def get_csv_line_from_json(cls, col_names, default_csv_line, full_flat_dic, json_load, line_number, is_print_error=0):
+    def get_csv_line_from_json(cls, col_names, default_csv_line, full_flat_dic, json_load, line_number,
+                               problems, problem_lines, problem_nums, is_print_error):
+        '''
+
+        col_names = ["order.location", "client.email"]
+        json_load = '{"client":{"phone":"923143****", "email":"aaaaaaaa_aaaaaaa_2018@mail.ru\\n"}}'
+        full_flat_dic = {"order.location": "", "client.email": ""}
+
+        get_csv_line_from_json(col_names, default_csv_line, full_flat_dic, json_load, ....
+        :return:
+         "","aaaaaaaa_aaaaaaa_2018@mail.ru\\n"
+
+
+        '''
+
         try:
             d = json.loads(json_load)
             flat_dic = cls.get_flat_dictionary(d)
@@ -271,17 +289,25 @@ class Converter:
             col_names_values = [str(flat_dic[col]) for col in col_names]
             csv_line = '"' + '","'.join(col_names_values) + '"'
         except:
-            if is_print_error == 1:
+            problem = "Json does nto convert to dict."
+            if is_print_error == 1 or (is_print_error == 2 and not json_load.startswith('NULL')):
                 print("col num =" + str(line_number))
+                print(problem)
                 print(json_load)
-            elif is_print_error == 2 and json_load != "NULL":
-                print("col num =" + str(line_number))
-                print(json_load)
+
+            problems.append(problem)
+            problem_lines.append(json_load)
+            problem_nums.append(line_number)
+
             csv_line = default_csv_line
         return csv_line
 
     @classmethod
-    def find_problems_line(cls, json_load, line_number, problem_lines, problem_nums, problems):
+    def find_problems_line(cls, json_load, line_number, problems, problem_lines, problem_nums):
+        '''
+        json_load = {"email":"aaaaaaaa_aaaaaaa_2018@mail.ru\\\\n"}
+        re.findall(RegPattern.BACKSLASH_IN_LINE, json_load) ->  ['aaaaaaaa_aaaaaaa_2018@mail.ru\\\\n']
+        '''
         problem = re.findall(RegPattern.BACKSLASH_IN_LINE, json_load)
         if len(problem) > 0:
             problems += problem

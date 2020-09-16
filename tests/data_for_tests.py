@@ -128,3 +128,5 @@ class DataForTests:
     intput_file = current_dir + '/input_json_converter.csv'
     output_file = current_dir + '/output_json_converter.txt'
     head_output_file = current_dir + '/head_output_file.txt'
+    incorrect_html_file = current_dir + '/incorrect_csv_html.csv'
+    correct_html_file = current_dir + '/correct_csv_html.csv'

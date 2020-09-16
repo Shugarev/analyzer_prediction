@@ -23,7 +23,12 @@ class RegPattern:
                                     re.sub(RegPattern.WORD_AFTER_COLON, ':"\\1"', str(x)))
     {"sms_notification":true, "has_rzd_bonus":false} -> {"sms_notification":"true", "has_rzd_bonus":"false"}
     '''
-
+    FIRST_SYMBOL_IS_NOT_DBLQUATER = r'^[^"]'
+    LAST_SYMBOL_IS_NOT_DBLQUATER = r'[^"]$'
+    ONLY_BACKSPACE = r'^\s*$'
+    BACKSLASH = r'\\'
+    DBLQUATER_WITH_INCORRECT_SYMBOLS = '[0-9a-zA-Z \\\]"[a-zA-Z0-9 ]'
+    END_LINE_SYMBOLS = '(\\r|\\n)'
 
 class UtilsKy:
     # kyw3
