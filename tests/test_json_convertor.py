@@ -10,12 +10,17 @@ class TestConverterJson(unittest.TestCase):
     def setUp(self):
         self.str_for_converter = DataForTests.str_for_converter
         self.converted_str = DataForTests.converted_str
+        self.str_adds_quotes = DataForTests.str_adds_quotes
         self.input_file = DataForTests.intput_file
         self.output_file = DataForTests.output_file
+        self.head_output_file = DataForTests.head_output_file
+        self.json_load_for_patterns = DataForTests.json_load_for_patterns
+        self.is_prb_line = DataForTests.is_prb_line
 
     @classmethod
     def tearDownClass(cls):
-         os.remove(DataForTests.output_file)
+        os.remove(DataForTests.output_file)
+        pass
 
     def test_get_one_column_from_json(self):
         result = _get_one_column_from_json(self.str_for_converter, "client.phone")
@@ -78,11 +83,18 @@ class TestConverterJson(unittest.TestCase):
         df = DataForTests.df_converter
         col_name = "json"
         col_names = ['client.phone', 'client.email']
-        Converter.write_json_column_to_csv(df, col_name, col_names, self.output_file)
+        Converter.write_json_column_to_csv(df, col_name, col_names, self.output_file, is_print_error=0)
         f = open(self.output_file, 'r')
         file_read = f.read()
         result = [file_read]
         expected = ['"client.phone","client.email"\n"923143****","aaaaaa49@mail.ru"\n"","aaaa@gmail.com"\n']
+        self.assertEqual(result, expected, 'incorrect default data')
+
+    def test_correct_json_load(self):
+        result = Converter.correct_json_load(self.str_adds_quotes)
+        print(result)
+        expected = '{"is_trailer":"false","user_agent":"Mozilla/5.0 rv:52.0", "has_middle_name ":"true",' \
+                   '"insurance_selected":"null"}'
         self.assertEqual(result, expected, 'incorrect default data')
 
     def test_write_json_column_to_csv_read_data_from_file(self):
@@ -92,6 +104,35 @@ class TestConverterJson(unittest.TestCase):
         file_read = f.read()
         result = [file_read]
         expected = ['"order.location","client.email"\n"","aaaaaaaa_aaaaaaa_2018@mail.ru"\n"ЧУП Самелго-Плюс Сак",'
-                    '"aaaa@gmail.com"\n']
+                    '"aaaa@gmail.com"\n"",""\n']
         self.assertEqual(result, expected, 'incorrect default data')
 
+    def test_get_default_csv_line(self):
+        col_names = ["order.location", "client.email"]
+        result = Converter.get_default_csv_line(col_names)
+        expected = '"",""'
+        self.assertEqual(result, expected, 'incorrect default data')
+
+    def test_write_head_to_file(self):
+        col_names = ["order.location", "client.email"]
+        Converter.write_head_to_file(col_names, self.head_output_file)
+        f = open(self.head_output_file, 'r')
+        file_read = f.read()
+        result = [file_read]
+        expected = ['"order.location","client.email"\n']
+        self.assertEqual(result, expected, 'incorrect default data')
+
+    def test_update_json_by_pattern(self):
+        result = Converter.update_json_by_pattern(self.json_load_for_patterns)
+        expected = '{"is ":"false","user_agent":"Mo,zilla/5.0 rv:52.0"}'
+        self.assertEqual(result, expected, 'incorrect default data')
+
+    def test_is_problem_line(self):
+        result = Converter.is_problem_line(self.is_prb_line)
+        expected = 1
+        self.assertEqual(result, expected, 'incorrect default data')
+
+    def test_is_problem_line_2(self):
+        result = Converter.is_problem_line(self.str_adds_quotes)
+        expected = 0
+        self.assertEqual(result, expected, 'incorrect default data')

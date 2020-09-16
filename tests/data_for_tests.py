@@ -114,9 +114,17 @@ class DataForTests:
     str_for_converter_2 = '{"order":{"id":"111111111"},"client":{"email":"aaaa@gmail.com"}}'
     df_converter = pd.DataFrame(data={"json": [str_for_converter, str_for_converter_2]})
 
+    is_prb_line = '{"train":{"is_trailer":false,"is_firm":false, "email":shugarev@gmail.com}}'
+
+    str_adds_quotes = '{"is_trailer":false,"user_agent":"Mozilla/5.0 rv:52.0", "has_middle_name ":true,' \
+                      '"insurance_selected":null}'
+
+    json_load_for_patterns = '{"is\\\\\\\\":"\\\\"fal\\\\nse","u\\\\tser_agen\\\\bt":"Mo\\\\,zilla/5.0 rv:52.0"}'
+
     converted_str = {'client': {'phone': '923143****', 'name': 'Наталья Алтынбаева', 'email': 'aa49@mail.ru'}}
 
     current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 
     intput_file = current_dir + '/input_json_converter.csv'
     output_file = current_dir + '/output_json_converter.txt'
+    head_output_file = current_dir + '/head_output_file.txt'
