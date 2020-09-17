@@ -130,3 +130,7 @@ class DataForTests:
     head_output_file = current_dir + '/head_output_file.txt'
     incorrect_html_file = current_dir + '/incorrect_csv_html.csv'
     correct_html_file = current_dir + '/correct_csv_html.csv'
+
+    #  ----------------------------------------------------------- For Find problem lines -------------------------
+    file_problem_lines = current_dir + '/problem_lines.csv'
+

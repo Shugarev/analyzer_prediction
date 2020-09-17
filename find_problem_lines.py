@@ -1,7 +1,8 @@
 import re
 from utils import RegPattern
 
-def show_problem_line(input_file: str, show_tabs=True):
+
+def show_problem_lines(input_file: str, show_tabs=True):
 
     pattern = '(?<=[0-9a-zA-Z \\\])"(?=[a-zA-Z0-9 ])'
     # (?< условие до искомого паттеррна)
@@ -55,7 +56,21 @@ PATTERTS_LINE_DEFAULT = [(RegPattern.ONLY_BACKSPACE, 'The line is empty or conta
             ]
 
 
-def show_problem_line_v2(input_file: str, is_first_line_header=True, is_print_problem=True,
+def show_problems_in_line(line: str, patterns_with_message=PATTERTS_LINE_DEFAULT, is_print=True):
+    messages = []
+    for pattern, message in patterns_with_message:
+        if re.search(pattern, line) is not None:
+            messages.append(message)
+
+    if 2 * int(line.count('"') / 2) != line.count('"'):
+        messages.append("odd number of quotes in line. ")
+    problem_message = " ".join(messages) if len(messages) > 0 else ''
+    if is_print:
+        print('Problems in line:' + problem_message)
+    return problem_message
+
+
+def show_problem_lines_v2(input_file: str, is_first_line_header=True,
                          patterns_with_message=PATTERTS_LINE_DEFAULT):
 
     with open(input_file, "r") as fr:
@@ -68,23 +83,11 @@ def show_problem_line_v2(input_file: str, is_first_line_header=True, is_print_pr
             if line_num == 1 and is_first_line_header:
                 continue
             line = line.rstrip()
-            messages = []
-            for pattern, message in patterns_with_message:
-                if re.search(pattern, line) is not None:
-                    messages.append(message)
-
-            if 2 * int(line.count('"')/2) != line.count('"'):
-                messages.append("odd number of quotes in line. ")
-
-            if len(messages) > 0:
-                problem_lines.append(line)
+            problem_message = show_problems_in_line(line, patterns_with_message)
+            if problem_message:
                 problem_lines_num.append(line_num)
-                problem_message = " " . join(messages)
+                problem_lines.append(line)
                 problem_messages.append(problem_message)
-                if is_print_problem:
-                    print(' problem_lines_num: ' + str(line_num))
-                    print(' problem message: ' + problem_message)
-                    print(' problem line: \n' + line)
 
     return {'problem_lines': problem_lines,
              'problem_lines_num': problem_lines_num,
