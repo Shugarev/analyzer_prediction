@@ -127,6 +127,8 @@ class Converter:
 
         fw.close()
 
+        return {"problem_lines": problem_lines, "problem": problems, "problem_nums": problem_nums}
+
     @classmethod
     def write_head_to_file(cls, col_names, output_file):
         '''
