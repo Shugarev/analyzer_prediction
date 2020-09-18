@@ -1,7 +1,8 @@
 import re
 from utils import RegPattern
+from problems import ProblemLine
 
-
+#TODO remove method
 def show_problem_lines(input_file: str, show_tabs=True):
 
     pattern = '(?<=[0-9a-zA-Z \\\])"(?=[a-zA-Z0-9 ])'
@@ -56,7 +57,7 @@ PATTERTS_LINE_DEFAULT = [(RegPattern.ONLY_BACKSPACE, 'The line is empty or conta
             ]
 
 
-def show_problems_in_line(line: str, patterns_with_message=PATTERTS_LINE_DEFAULT, is_print=True):
+def show_problems_in_line(line: str, patterns_with_message=PATTERTS_LINE_DEFAULT):
     messages = []
     for pattern, message in patterns_with_message:
         if re.search(pattern, line) is not None:
@@ -64,20 +65,14 @@ def show_problems_in_line(line: str, patterns_with_message=PATTERTS_LINE_DEFAULT
 
     if 2 * int(line.count('"') / 2) != line.count('"'):
         messages.append("odd number of quotes in line. ")
-    problem_message = " ".join(messages) if len(messages) > 0 else ''
-    if is_print:
-        print('Problems in line:' + problem_message)
-    return problem_message
+    message = " ".join(messages) if len(messages) > 0 else ''
+    return message
 
 
-def show_problem_lines_v2(input_file: str, is_first_line_header=True,
-                         patterns_with_message=PATTERTS_LINE_DEFAULT):
-
+def show_problem_lines_v2(input_file: str, is_first_line_header=True, patterns_with_message=PATTERTS_LINE_DEFAULT):
+    problem_line = ProblemLine()
     with open(input_file, "r") as fr:
         line_num = 0
-        problem_lines = []
-        problem_lines_num = []
-        problem_messages = []
         for line in fr:
             line_num += 1
             if line_num == 1 and is_first_line_header:
@@ -85,10 +80,5 @@ def show_problem_lines_v2(input_file: str, is_first_line_header=True,
             line = line.rstrip()
             problem_message = show_problems_in_line(line, patterns_with_message)
             if problem_message:
-                problem_lines_num.append(line_num)
-                problem_lines.append(line)
-                problem_messages.append(problem_message)
-
-    return {'problem_lines': problem_lines,
-             'problem_lines_num': problem_lines_num,
-             'problem_messages': problem_messages}
+                problem_line.add_problem(line_num, line, problem_message)
+    return problem_line

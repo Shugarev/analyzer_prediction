@@ -2,6 +2,7 @@ import unittest
 
 from find_problem_lines import show_problems_in_line, show_problem_lines_v2
 from tests.data_for_tests import DataForTests
+from problems import ProblemLine
 
 
 class TestFindProblemsLines(unittest.TestCase):
@@ -51,11 +52,12 @@ class TestFindProblemsLines(unittest.TestCase):
         self.assertEqual(result, expected, 'incorrect default data')
 
     def test_show_problem_lines_v2(self):
-        result = show_problem_lines_v2(self.file_problem_lines)
-        expected = {'problem_lines': ['""', '"464625","\\n","\\r"', '"464626","\\","\\\\"', '464627","chars","chars"',
-                    '"464628","chars,"chars', '"464629","chars","ch"ars"'], 'problem_lines_num': [2, 4, 5, 6, 7, 8],
-                    'problem_messages': ['The line has only empty fields.', 'The line has backslash.',
+        problem_line = show_problem_lines_v2(self.file_problem_lines)
+        result = problem_line.get_problem_data()
+        expected = {'line': ['""', '"464625","\\n","\\r"', '"464626","\\","\\\\"', '464627","chars","chars"',
+                    '"464628","chars,"chars', '"464629","chars","ch"ars"'], 'num': [2, 4, 5, 6, 7, 8],
+                    'message': ['The line has only empty fields.', 'The line has backslash.',
                     'The line has backslash.', 'The line does not starts with ". odd number of quotes in line. ',
                     'The line does not ends with ".', 'There are additional double quotes in the string. '
                                                       'odd number of quotes in line. ']}
-        self.assertEqual(result, expected, 'incorrect default data')
+        self.assertCountEqual(result, expected, 'incorrect default data')

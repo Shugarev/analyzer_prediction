@@ -2,7 +2,6 @@ import unittest
 import os
 from tests.data_for_tests import DataForTests
 from data_json.converter import Converter
-from data_json.converter import _get_one_column_from_json
 
 
 class TestConverterJson(unittest.TestCase):
@@ -23,12 +22,12 @@ class TestConverterJson(unittest.TestCase):
         pass
 
     def test_get_one_column_from_json(self):
-        result = _get_one_column_from_json(self.str_for_converter, "client.phone")
+        result = Converter.get_one_column_from_json(self.str_for_converter, "client.phone")
         expected = "923143****"
         self.assertEqual(result, expected, 'incorrect default data')
 
     def test_empty_get_one_column_from_json(self):
-        result = _get_one_column_from_json(self.str_for_converter, "notexist.col")
+        result = Converter.get_one_column_from_json(self.str_for_converter, "notexist.col")
         expected = ''
         self.assertEqual(result, expected, 'incorrect default data')
 
@@ -57,7 +56,9 @@ class TestConverterJson(unittest.TestCase):
 
     def test_merge_flat_dictionary_keys_from_json_column(self):
         df = DataForTests.df_converter
-        result = Converter.merge_flat_dictionary_keys_from_json_column(df, col_name='json')
+        converter = Converter()
+        result = converter.merge_flat_dictionary_keys_from_json_column(df, col_name='json')
+
         expected = ['client.phone', 'order.id', 'client.email']
         self.assertCountEqual(result, expected, r'incorrect update for pattern \\\\ ')
 
@@ -83,7 +84,8 @@ class TestConverterJson(unittest.TestCase):
         df = DataForTests.df_converter
         col_name = "json"
         col_names = ['client.phone', 'client.email']
-        Converter.write_json_column_to_csv(df, col_name, col_names, self.output_file, is_print_error=0)
+        converter = Converter()
+        converter.write_json_column_to_csv(df, col_name, col_names, self.output_file)
         f = open(self.output_file, 'r')
         file_read = f.read()
         result = [file_read]
@@ -99,7 +101,8 @@ class TestConverterJson(unittest.TestCase):
 
     def test_write_json_column_to_csv_read_data_from_file(self):
         col_names = ["order.location", "client.email"]
-        Converter.write_json_column_to_csv_read_data_from_file(self.input_file, col_names, self.output_file)
+        converter = Converter()
+        converter.write_json_column_to_csv_read_data_from_file(self.input_file, col_names, self.output_file)
         f = open(self.output_file, 'r')
         file_read = f.read()
         result = [file_read]

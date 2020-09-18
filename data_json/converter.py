@@ -2,25 +2,14 @@ import pandas as pd
 import json
 import re
 from utils import RegPattern
-
-
-def _get_one_column_from_json(x: str, col_name: str):
-    '''
-     :example
-     x = '{"client":{"phone":"923143****", "name":"Наталья Алтынбаева", "email":"aa49@mail.ru"}}'
-     col_name = 'client.phone'
-      _get_one_column_from_json(x,col_name) -> "923143****"
-    '''
-    try:
-        d = json.loads(x)
-        flat_dictionary = Converter.get_flat_dictionary(d)
-        ret_val = flat_dictionary[col_name]
-    except:
-        ret_val = ''
-    return ret_val
+from problems import ProblemLine
 
 
 class Converter:
+
+    def __init__(self):
+        self.problem_lines = ProblemLine()
+
     @classmethod
     def get_flat_dictionary(cls, item, old_key=None) -> dict:
         '''
@@ -49,13 +38,23 @@ class Converter:
         return flat_dic
 
     @classmethod
-    def merge_flat_dictionary_keys_from_json_column(cls, dt: pd.DataFrame, col_name: str, is_print_error=0) -> list:
+    def get_one_column_from_json(cls, x: str, col_name: str):
         '''
-        params:
-            is_print_error
-            0 - don't print
-            1 - print all error
-            2 - print all error except NULL fields
+         :example
+         x = '{"client":{"phone":"923143****", "name":"Наталья Алтынбаева", "email":"aa49@mail.ru"}}'
+         col_name = 'client.phone'
+          _get_one_column_from_json(x,col_name) -> "923143****"
+        '''
+        try:
+            d = json.loads(x)
+            flat_dictionary = cls.get_flat_dictionary(d)
+            ret_val = flat_dictionary[col_name]
+        except:
+            ret_val = ''
+        return ret_val
+
+    def merge_flat_dictionary_keys_from_json_column(self, dt: pd.DataFrame, col_name: str) -> list:
+        '''
         example:
             data_json = [{"client":{"phone":"923143****", "email":"aaaaaa49@mail.ru"}},
                         {"order":{"id":"111111111"}, "client":{"email":"aaaa@gmail.com"}}]
@@ -67,6 +66,7 @@ class Converter:
             ['client.phone', 'order.id', 'client.email']
              Порядок полей в листе может быть разный
         '''
+        self.problem_lines = ProblemLine()
         n = dt.shape[0]
         col_names = []
         column_values = dt[col_name].tolist()
@@ -75,28 +75,16 @@ class Converter:
             json_load = column_values[i]
             try:
                 d = json.loads(json_load)
-                flat_dic = cls.get_flat_dictionary(d)
+                flat_dic = self.get_flat_dictionary(d)
             except:
-                if is_print_error == 1:
-                    print("col num =" + str(i))
-                    print(json_load)
-                elif is_print_error == 2 and json_load != "NULL":
-                    print("col num =" + str(i))
-                    print(json_load)
+                self.problem_lines.add_problem(i, str(json_load), 'incorrect json' )
                 flat_dic = {}
 
             col_names = list(set(col_names + list(flat_dic.keys())))
         return col_names
 
-    @classmethod
-    def write_json_column_to_csv(cls, dt: pd.DataFrame, col_name: str, col_names: list, output_file: str,
-                                 is_print_error=0):
+    def write_json_column_to_csv(self, dt: pd.DataFrame, col_name: str, col_names: list, output_file: str):
         '''
-        params:
-            is_print_error
-            0 - don't print
-            1 - print all error
-            2 - print all error except NULL fields
         example:
             data_json = [{"client":{"phone":"923143****", "email":"aaaaaa49@mail.ru"}},
                         {"order":{"id":"111111111"}, "client":{"email":"aaaa@gmail.com"}}]
@@ -108,26 +96,23 @@ class Converter:
         return:
             ['"client.phone","client.email"\n"923143****","aaaaaa49@mail.ru"\n"","aaaa@gmail.com"\n']
         '''
-        fw = cls.write_head_to_file(col_names, output_file)
+        fw = self.write_head_to_file(col_names, output_file)
 
         n = dt.shape[0]
         column_values = dt[col_name].tolist()
         full_flat_dic = {str(key): "" for key in col_names}
 
-        default_csv_line = cls.get_default_csv_line(col_names)
+        default_csv_line = self.get_default_csv_line(col_names)
 
-        problems = []
-        problem_lines = []
-        problem_nums = []
+        self.problem_lines = ProblemLine()
         for line_number in range(n):
             json_load = column_values[line_number]
-            csv_line = cls.get_csv_line_from_json(col_names,  default_csv_line, full_flat_dic, json_load, line_number,
-                                                  problems, problem_lines, problem_nums, is_print_error)
+            csv_line = self.get_csv_line_from_json(col_names, default_csv_line, full_flat_dic, json_load, line_number)
             fw.write(csv_line + "\n")
 
         fw.close()
 
-        return {"problem_lines": problem_lines, "problem": problems, "problem_nums": problem_nums}
+        return self.problem_lines
 
     @classmethod
     def write_head_to_file(cls, col_names, output_file):
@@ -159,7 +144,7 @@ class Converter:
         return_2:
             pd.Series({0: '', 1: '111111111'})
         '''
-        return dt[col_json_name].apply(lambda x: _get_one_column_from_json(x, col_name))
+        return dt[col_json_name].apply(lambda x: cls.get_one_column_from_json(x, col_name))
 
     @classmethod
     def correct_json_load(cls, json_load: str)->str:
@@ -180,16 +165,8 @@ class Converter:
         json_load = re.sub(':\s*null', ':"null"', json_load)
         return json_load
 
-    @classmethod
-    def write_json_column_to_csv_read_data_from_file(cls, input_file: str, col_names: list, output_file: str,
-                                                     is_print_error=0):
+    def write_json_column_to_csv_read_data_from_file(self, input_file: str, col_names: list, output_file: str):
         '''
-        params:
-            is_print_error
-            0 - don't print
-            1 - print all error
-            2 - print all error except NULL fields
-
         example:
             input_file.csv:
             order_id		json
@@ -204,13 +181,11 @@ class Converter:
             "","aaaaaaaa_aaaaaaa_2018@mail.ru"
             "ЧУП Самелго-Плюс Сак","aaaa@gmail.com"
         '''
-        fw = cls.write_head_to_file(col_names, output_file)
-        default_csv_line = cls.get_default_csv_line(col_names)
+        fw = self.write_head_to_file(col_names, output_file)
+        default_csv_line = self.get_default_csv_line(col_names)
 
         full_flat_dic = {str(key): "" for key in col_names}
-        problems = []
-        problem_lines = []
-        problem_nums = []
+        self.problem_lines = ProblemLine()
 
         with open(input_file) as fr:
             line = fr.readline()
@@ -220,25 +195,22 @@ class Converter:
                     result = re.search(RegPattern.JSON_LINE, line)
                     if result:
                         json_load = result.group(0)
-                        cls.find_problems_line(json_load, line_number, problems, problem_lines, problem_nums)
+                        self.find_problems_line(json_load, line_number)
 
-                        json_load = cls.update_json_by_pattern(json_load)
+                        json_load = self.update_json_by_pattern(json_load)
 
-                        json_load = cls.correct_json_load(json_load)
+                        json_load = self.correct_json_load(json_load)
 
-                        csv_line = cls.get_csv_line_from_json(col_names, default_csv_line, full_flat_dic, json_load
-                                                              , line_number, problems, problem_lines, problem_nums
-                                                              , is_print_error)
+                        csv_line = self.get_csv_line_from_json(col_names, default_csv_line, full_flat_dic, json_load
+                                                               , line_number)
                     else:
-                        csv_line = cls.not_extracted_json_col_by_regexp(default_csv_line, line, line_number,
-                                                                        problems, problem_lines, problem_nums,
-                                                                        is_print_error)
+                        csv_line = self.not_extracted_json_col_by_regexp(default_csv_line, line, line_number)
                     fw.write(csv_line + "\n")
 
                 line_number += 1
                 line = fr.readline()
 
-        return {"problem_lines": problem_lines, "problem": problems, "problem_nums": problem_nums}
+        return self.problem_lines
 
     @classmethod
     def get_default_csv_line(cls, col_names):
@@ -251,26 +223,17 @@ class Converter:
         default_csv_line = '"' + '","'.join(default_list) + '"'
         return default_csv_line
 
-    @classmethod
-    def not_extracted_json_col_by_regexp(cls, default_csv_line, line, line_number, problems,  problem_lines, problem_nums
-                                         , is_print_error):
+
+    def not_extracted_json_col_by_regexp(self, default_csv_line, line, line_number):
         '''
         if  is_print_error=1 then print line
         :param line='NULL	Туту ЖД		NULL	2019-06-20 10:25:14'
         '''
         problem = 'does not pares json field'
-        problems.append(problem)
-        problem_lines.append(line)
-        problem_nums.append(line_number)
-        if is_print_error == 1:
-            print(problem)
-            print(line_number)
-            print(line)
+        self.problem_lines.add_problem(line_number, line, problem)
         return default_csv_line
 
-    @classmethod
-    def get_csv_line_from_json(cls, col_names, default_csv_line, full_flat_dic, json_load, line_number,
-                               problems, problem_lines, problem_nums, is_print_error):
+    def get_csv_line_from_json(self, col_names, default_csv_line, full_flat_dic, json_load, line_number):
         '''
 
         col_names = ["order.location", "client.email"]
@@ -280,41 +243,28 @@ class Converter:
         get_csv_line_from_json(col_names, default_csv_line, full_flat_dic, json_load, ....
         :return:
          "","aaaaaaaa_aaaaaaa_2018@mail.ru\\n"
-
-
         '''
 
         try:
             d = json.loads(json_load)
-            flat_dic = cls.get_flat_dictionary(d)
+            flat_dic = self.get_flat_dictionary(d)
             flat_dic = {**full_flat_dic, **flat_dic}
             col_names_values = [str(flat_dic[col]) for col in col_names]
             csv_line = '"' + '","'.join(col_names_values) + '"'
         except:
             problem = "Json does nto convert to dict."
-            if is_print_error == 1 or (is_print_error == 2 and not json_load.startswith('NULL')):
-                print("col num =" + str(line_number))
-                print(problem)
-                print(json_load)
-
-            problems.append(problem)
-            problem_lines.append(json_load)
-            problem_nums.append(line_number)
-
+            self.problem_lines.add_problem(line_number, json_load, problem)
             csv_line = default_csv_line
         return csv_line
 
-    @classmethod
-    def find_problems_line(cls, json_load, line_number, problems, problem_lines, problem_nums):
+    def find_problems_line(self, json_load, line_number):
         '''
         json_load = {"email":"aaaaaaaa_aaaaaaa_2018@mail.ru\\\\n"}
         re.findall(RegPattern.BACKSLASH_IN_LINE, json_load) ->  ['aaaaaaaa_aaaaaaa_2018@mail.ru\\\\n']
         '''
         problem = re.findall(RegPattern.BACKSLASH_IN_LINE, json_load)
         if len(problem) > 0:
-            problems += problem
-            problem_lines.append(str(json_load))
-            problem_nums.append(line_number)
+            self.problem_lines.add_problem(line_number, json_load, problem)
 
     @classmethod
     def update_json_by_pattern(cls, json_load: str) -> str:
