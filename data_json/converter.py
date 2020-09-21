@@ -38,6 +38,67 @@ class Converter:
         return flat_dic
 
     @classmethod
+    def get_default_csv_line(cls, col_names):
+        '''
+        example:
+            col_names = ["order.location", "client.email"]
+        result: '"",""' -> for empty df rows
+        '''
+        default_list = [""] * len(col_names)
+        default_csv_line = '"' + '","'.join(default_list) + '"'
+        return default_csv_line
+
+    @classmethod
+    def is_problem_line(cls, line):
+        '''
+        :example
+            line = '{"train":{"is_trailer":false,"is_firm":false, "email":shugarev@gmail.com}}'
+        result: 1
+        :example 2
+            line = '{"train":{"is_trailer":false,"is_firm":true, "email":null}}'
+        result 2: 0
+        '''
+        pattern = ':([a-zA-Z]+)'
+        incorrect_values = {'true', 'false', 'null'}
+        incorrect_values_in_line = set(re.findall(pattern, line))
+        diff = incorrect_values_in_line.difference(incorrect_values)
+        return len(diff)
+
+    @classmethod
+    def correct_json_load(cls, json_load: str) -> str:
+        '''
+        :example
+        json_load = '{"is_trailer":false,"user_agent":"Mozilla/5.0 rv:52.0", "has_middle_name ":true,
+         "insurance_selected":null}'
+         correct_json_load(cls, json_load)
+         :return '{"is_trailer":"false","user_agent":"Mozilla/5.0 rv:52.0", "has_middle_name ":"true",
+         "insurance_selected":"null"}'
+
+         add adds extra quotes: rv:52.0->rv:"52.0"
+         json_load = re.sub(RegPattern.WORD_AFTER_COLON, ':"\\1"', str(json_load))
+        '''
+
+        json_load = re.sub(':\s*true', ':"true"', json_load)
+        json_load = re.sub(':\s*false', ':"false"', json_load)
+        json_load = re.sub(':\s*null', ':"null"', json_load)
+        return json_load
+
+    @classmethod
+    def update_json_by_pattern(cls, json_load: str) -> str:
+        '''
+        example :
+            patterns = '{"is\\\\\\\\":"\\\\"fal\\\\nse","u\\\\tser_agen\\\\bt":"Mo\\\\,zilla/5.0 rv:52.0"}'
+        result: '{"is ":"false","user_agent":"Mo,zilla/5.0 rv:52.0"}'
+        '''
+        json_load = re.sub(RegPattern.BACKSLASH_4, ' ', json_load)
+        json_load = re.sub(RegPattern.BACKSLASH_2_n, '', json_load)
+        json_load = re.sub(RegPattern.BACKSLASH_2_t, '', json_load)
+        json_load = re.sub(RegPattern.BACKSLASH_2_b, '', json_load)
+        json_load = re.sub(RegPattern.BACKSLASH_2_DBLQUATER, '', json_load)
+        json_load = re.sub(RegPattern.BACKSLASH_2_COMA, ',', json_load)
+        return json_load
+
+    @classmethod
     def get_one_column_from_json(cls, x: str, col_name: str):
         '''
          :example
@@ -52,6 +113,78 @@ class Converter:
         except:
             ret_val = ''
         return ret_val
+
+    @classmethod
+    def write_head_to_file(cls, col_names, output_file):
+        '''
+        example:
+            col_names = ["order.location", "client.email"]
+        result: ['"order.location","client.email"\n'] -> in output file
+        '''
+        fw = open(output_file, 'w')
+        csv_line = '"' + '","'.join(col_names) + '"'
+        fw.write(csv_line + "\n")
+        return fw
+
+    @classmethod
+    def convert_one_column_from_json(cls, dt, col_json_name, col_name) -> pd.Series:
+        '''
+        example:
+            data_json = [{"client":{"phone":"923143****", "email":"aaaaaa49@mail.ru"}},
+                        {"order":{"id":"111111111"}, "client":{"email":"aaaa@gmail.com"}}]
+
+            df = pd.DataFrame(data={"json":data_json})
+            col_json = 'json'
+
+            Converter.convert_one_column_from_json(df, col_json, 'client.email')
+        return:
+            pd.Series({0: 'aaaaaa49@mail.ru', 1: 'aaaa@gmail.com'})
+
+            Converter.convert_one_column_from_json(df, col_json, 'order.id')
+        return_2:
+            pd.Series({0: '', 1: '111111111'})
+        '''
+        return dt[col_json_name].apply(lambda x: cls.get_one_column_from_json(x, col_name))
+
+    def not_extracted_json_col_by_regexp(self, default_csv_line, line, line_number):
+        '''
+        :param line='NULL	Туту ЖД		NULL	2019-06-20 10:25:14'
+        '''
+        problem = 'does not pares json field'
+        self.problem_lines.add_problem(line_number, line, problem)
+        return default_csv_line
+
+    def find_problems_line(self, json_load, line_number):
+        '''
+        json_load = {"email":"aaaaaaaa_aaaaaaa_2018@mail.ru\\\\n"}
+        re.findall(RegPattern.BACKSLASH_IN_LINE, json_load) ->  ['aaaaaaaa_aaaaaaa_2018@mail.ru\\\\n']
+        '''
+        problem = re.findall(RegPattern.BACKSLASH_IN_LINE, json_load)
+        if len(problem) > 0:
+            self.problem_lines.add_problem(line_number, json_load, problem)
+
+    def get_csv_line_from_json(self, col_names, default_csv_line, json_load, line_number):
+        '''
+        col_names = ["order.location", "client.email"]
+        json_load = '{"client":{"phone":"923143****", "email":"aaaaaaaa_aaaaaaa_2018@mail.ru"}}'
+        default_csv_line = ''
+        line_number = -1
+
+        get_csv_line_from_json(col_names, default_csv_line, json_load, line_number)
+        :return:
+         "","aaaaaaaa_aaaaaaa_2018@mail.ru"
+        '''
+
+        try:
+            d = json.loads(json_load)
+            flat_dic = self.get_flat_dictionary(d)
+            col_names_values = [str(flat_dic.get(key, '')) for key in col_names]
+            csv_line = '"' + '","'.join(col_names_values) + '"'
+        except:
+            problem = "Json does nto convert to dict."
+            self.problem_lines.add_problem(line_number, json_load, problem)
+            csv_line = default_csv_line
+        return csv_line
 
     def merge_flat_dictionary_keys_from_json_column(self, dt: pd.DataFrame, col_name: str) -> list:
         '''
@@ -100,70 +233,17 @@ class Converter:
 
         n = dt.shape[0]
         column_values = dt[col_name].tolist()
-        full_flat_dic = {str(key): "" for key in col_names}
-
         default_csv_line = self.get_default_csv_line(col_names)
 
         self.problem_lines = ProblemLine()
         for line_number in range(n):
             json_load = column_values[line_number]
-            csv_line = self.get_csv_line_from_json(col_names, default_csv_line, full_flat_dic, json_load, line_number)
+            csv_line = self.get_csv_line_from_json(col_names, default_csv_line, json_load, line_number)
             fw.write(csv_line + "\n")
 
         fw.close()
 
         return self.problem_lines
-
-    @classmethod
-    def write_head_to_file(cls, col_names, output_file):
-        '''
-        example:
-            col_names = ["order.location", "client.email"]
-        result: ['"order.location","client.email"\n'] -> in output file
-        '''
-        fw = open(output_file, 'w')
-        csv_line = '"' + '","'.join(col_names) + '"'
-        fw.write(csv_line + "\n")
-        return fw
-
-    @classmethod
-    def convert_one_column_from_json(cls, dt, col_json_name, col_name) -> pd.Series:
-        '''
-        example:
-            data_json = [{"client":{"phone":"923143****", "email":"aaaaaa49@mail.ru"}},
-                        {"order":{"id":"111111111"}, "client":{"email":"aaaa@gmail.com"}}]
-
-            df = pd.DataFrame(data={"json":data_json})
-            col_json = 'json'
-
-            Converter.convert_one_column_from_json(df, col_json, 'client.email')
-        return:
-            pd.Series({0: 'aaaaaa49@mail.ru', 1: 'aaaa@gmail.com'})
-
-            Converter.convert_one_column_from_json(df, col_json, 'order.id')
-        return_2:
-            pd.Series({0: '', 1: '111111111'})
-        '''
-        return dt[col_json_name].apply(lambda x: cls.get_one_column_from_json(x, col_name))
-
-    @classmethod
-    def correct_json_load(cls, json_load: str)->str:
-        '''
-        :example
-        json_load = '{"is_trailer":false,"user_agent":"Mozilla/5.0 rv:52.0", "has_middle_name ":true,
-         "insurance_selected":null}'
-         correct_json_load(cls, json_load)
-         :return '{"is_trailer":"false","user_agent":"Mozilla/5.0 rv:52.0", "has_middle_name ":"true",
-         "insurance_selected":"null"}'
-
-         add adds extra quotes: rv:52.0->rv:"52.0"
-         json_load = re.sub(RegPattern.WORD_AFTER_COLON, ':"\\1"', str(json_load))
-        '''
-
-        json_load = re.sub(':\s*true', ':"true"', json_load)
-        json_load = re.sub(':\s*false', ':"false"', json_load)
-        json_load = re.sub(':\s*null', ':"null"', json_load)
-        return json_load
 
     def write_json_column_to_csv_read_data_from_file(self, input_file: str, col_names: list, output_file: str):
         '''
@@ -184,7 +264,6 @@ class Converter:
         fw = self.write_head_to_file(col_names, output_file)
         default_csv_line = self.get_default_csv_line(col_names)
 
-        full_flat_dic = {str(key): "" for key in col_names}
         self.problem_lines = ProblemLine()
 
         with open(input_file) as fr:
@@ -201,8 +280,7 @@ class Converter:
 
                         json_load = self.correct_json_load(json_load)
 
-                        csv_line = self.get_csv_line_from_json(col_names, default_csv_line, full_flat_dic, json_load
-                                                               , line_number)
+                        csv_line = self.get_csv_line_from_json(col_names, default_csv_line, json_load, line_number)
                     else:
                         csv_line = self.not_extracted_json_col_by_regexp(default_csv_line, line, line_number)
                     fw.write(csv_line + "\n")
@@ -212,87 +290,11 @@ class Converter:
 
         return self.problem_lines
 
-    @classmethod
-    def get_default_csv_line(cls, col_names):
-        '''
-        example:
-            col_names = ["order.location", "client.email"]
-        result: '"",""' -> for empty df rows
-        '''
-        default_list = [""] * len(col_names)
-        default_csv_line = '"' + '","'.join(default_list) + '"'
-        return default_csv_line
 
 
-    def not_extracted_json_col_by_regexp(self, default_csv_line, line, line_number):
-        '''
-        if  is_print_error=1 then print line
-        :param line='NULL	Туту ЖД		NULL	2019-06-20 10:25:14'
-        '''
-        problem = 'does not pares json field'
-        self.problem_lines.add_problem(line_number, line, problem)
-        return default_csv_line
 
-    def get_csv_line_from_json(self, col_names, default_csv_line, full_flat_dic, json_load, line_number):
-        '''
 
-        col_names = ["order.location", "client.email"]
-        json_load = '{"client":{"phone":"923143****", "email":"aaaaaaaa_aaaaaaa_2018@mail.ru\\n"}}'
-        full_flat_dic = {"order.location": "", "client.email": ""}
 
-        get_csv_line_from_json(col_names, default_csv_line, full_flat_dic, json_load, ....
-        :return:
-         "","aaaaaaaa_aaaaaaa_2018@mail.ru\\n"
-        '''
 
-        try:
-            d = json.loads(json_load)
-            flat_dic = self.get_flat_dictionary(d)
-            flat_dic = {**full_flat_dic, **flat_dic}
-            col_names_values = [str(flat_dic[col]) for col in col_names]
-            csv_line = '"' + '","'.join(col_names_values) + '"'
-        except:
-            problem = "Json does nto convert to dict."
-            self.problem_lines.add_problem(line_number, json_load, problem)
-            csv_line = default_csv_line
-        return csv_line
 
-    def find_problems_line(self, json_load, line_number):
-        '''
-        json_load = {"email":"aaaaaaaa_aaaaaaa_2018@mail.ru\\\\n"}
-        re.findall(RegPattern.BACKSLASH_IN_LINE, json_load) ->  ['aaaaaaaa_aaaaaaa_2018@mail.ru\\\\n']
-        '''
-        problem = re.findall(RegPattern.BACKSLASH_IN_LINE, json_load)
-        if len(problem) > 0:
-            self.problem_lines.add_problem(line_number, json_load, problem)
 
-    @classmethod
-    def update_json_by_pattern(cls, json_load: str) -> str:
-        '''
-        example :
-            patterns = '{"is\\\\\\\\":"\\\\"fal\\\\nse","u\\\\tser_agen\\\\bt":"Mo\\\\,zilla/5.0 rv:52.0"}'
-        result: '{"is ":"false","user_agent":"Mo,zilla/5.0 rv:52.0"}'
-        '''
-        json_load = re.sub(RegPattern.BACKSLASH_4, ' ', json_load)
-        json_load = re.sub(RegPattern.BACKSLASH_2_n, '', json_load)
-        json_load = re.sub(RegPattern.BACKSLASH_2_t, '', json_load)
-        json_load = re.sub(RegPattern.BACKSLASH_2_b, '', json_load)
-        json_load = re.sub(RegPattern.BACKSLASH_2_DBLQUATER, '', json_load)
-        json_load = re.sub(RegPattern.BACKSLASH_2_COMA, ',', json_load)
-        return json_load
-
-    @classmethod
-    def is_problem_line(cls, line):
-        '''
-        :example
-            line = '{"train":{"is_trailer":false,"is_firm":false, "email":shugarev@gmail.com}}'
-        result: 1
-        :example 2
-            line = '{"train":{"is_trailer":false,"is_firm":true, "email":null}}'
-        result 2: 0
-        '''
-        pattern = ':([a-zA-Z]+)'
-        incorrect_values = {'true', 'false', 'null'}
-        incorrect_values_in_line = set(re.findall(pattern, line))
-        diff = incorrect_values_in_line.difference(incorrect_values)
-        return len(diff)

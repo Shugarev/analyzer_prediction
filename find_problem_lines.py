@@ -53,7 +53,7 @@ PATTERTS_LINE_DEFAULT = [(RegPattern.ONLY_BACKSPACE, 'The line is empty or conta
     , (RegPattern.FIRST_SYMBOL_IS_NOT_DBLQUATER, 'The line does not starts with ".')
     , (RegPattern.LAST_SYMBOL_IS_NOT_DBLQUATER, 'The line does not ends with ".')
     , (RegPattern.DBLQUATER_WITH_INCORRECT_SYMBOLS, 'There are additional double quotes in the string.')
-    , (RegPattern.ONLY_BACKSPACE, 'The line has special symbol like \\t.')
+    , (RegPattern.ONLY_BACKSPACE, 'The line has only backspace.')
             ]
 
 

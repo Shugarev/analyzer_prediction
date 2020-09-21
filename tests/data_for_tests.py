@@ -114,6 +114,8 @@ class DataForTests:
     str_for_converter_2 = '{"order":{"id":"111111111"},"client":{"email":"aaaa@gmail.com"}}'
     df_converter = pd.DataFrame(data={"json": [str_for_converter, str_for_converter_2]})
 
+    json_load = '{"client":{"phone":"923143****", "email":"aaaaaaaa_aaaaaaa_2018@mail.ru"}}'
+
     is_prb_line = '{"train":{"is_trailer":false,"is_firm":false, "email":shugarev@gmail.com}}'
 
     str_adds_quotes = '{"is_trailer":false,"user_agent":"Mozilla/5.0 rv:52.0", "has_middle_name ":true,' \

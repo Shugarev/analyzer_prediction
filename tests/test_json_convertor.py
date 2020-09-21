@@ -15,11 +15,11 @@ class TestConverterJson(unittest.TestCase):
         self.head_output_file = DataForTests.head_output_file
         self.json_load_for_patterns = DataForTests.json_load_for_patterns
         self.is_prb_line = DataForTests.is_prb_line
+        self.json_load = DataForTests.json_load
 
     @classmethod
     def tearDownClass(cls):
         os.remove(DataForTests.output_file)
-        pass
 
     def test_get_one_column_from_json(self):
         result = Converter.get_one_column_from_json(self.str_for_converter, "client.phone")
@@ -139,3 +139,43 @@ class TestConverterJson(unittest.TestCase):
         result = Converter.is_problem_line(self.str_adds_quotes)
         expected = 0
         self.assertEqual(result, expected, 'incorrect default data')
+
+    def test_get_csv_line_from_json(self):
+        col_names = ["order.location", "client.email"]
+        default_csv_line = ''
+        converter = Converter()
+        line_number = -1
+        result = converter.get_csv_line_from_json(col_names, default_csv_line, self.json_load, line_number)
+        expected = '"","aaaaaaaa_aaaaaaa_2018@mail.ru"'
+        self.assertEqual(result, expected, 'incorrect default data')
+
+    def test_get_csv_line_from_json_2(self):
+        col_names = ["order.location", "client.phone", "client.email"]
+        json_load = '{"client":{"phone": 923143, "email":"aaaaaaaa_aaaaaaa_2018@mail.ru"}}'
+        default_csv_line = ''
+        converter = Converter()
+        line_number = -1
+        result = converter.get_csv_line_from_json(col_names, default_csv_line, json_load, line_number)
+        expected = '"","923143","aaaaaaaa_aaaaaaa_2018@mail.ru"'
+        self.assertEqual(result, expected, 'incorrect default data')
+
+    def test_not_extracted_json_col_by_regexp(self):
+        converter = Converter()
+        default_csv_line = ''
+        line_number = -1
+        line = 'NULL	Туту ЖД		NULL	2019-06-20 10:25:14'
+        result = converter.not_extracted_json_col_by_regexp(default_csv_line, line, line_number)
+        print(result)
+        expected = ''
+        self.assertEqual(result, expected, 'incorrect default data')
+
+    def test_not_extracted_json_col_by_regexp_2(self):
+        converter = Converter()
+        default_csv_line = ''
+        line_number = -1
+        line = '2333 Туту ЖД {"order":{"id":"111111111"},"client":{"email":"aaaa@gmail.com"}} 2019-06-20 10:25:14'
+        result = converter.not_extracted_json_col_by_regexp(default_csv_line, line, line_number)
+        print(result)
+        expected = ''
+        self.assertEqual(result, expected, 'incorrect default data')
+        pass

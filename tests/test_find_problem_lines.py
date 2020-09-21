@@ -2,7 +2,6 @@ import unittest
 
 from find_problem_lines import show_problems_in_line, show_problem_lines_v2
 from tests.data_for_tests import DataForTests
-from problems import ProblemLine
 
 
 class TestFindProblemsLines(unittest.TestCase):
@@ -12,7 +11,7 @@ class TestFindProblemsLines(unittest.TestCase):
     def test_show_problems_in_line_1(self):
         line = ''
         result = show_problems_in_line(line)
-        expected = 'The line is empty or contains only whitespace characters. The line has special symbol like \\t.'
+        expected = 'The line is empty or contains only whitespace characters. The line has only backspace.'
         self.assertEqual(result, expected, 'incorrect default data')
 
     def test_show_problems_in_line_2(self):

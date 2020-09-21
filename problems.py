@@ -23,7 +23,7 @@ class ProblemLine:
 
     def add_problem(self, num, line, message):
         if message is list:
-            message = " ".join(messages) if len(messages) > 0 else ''
+            message = " ".join(message) if len(message) > 0 else ''
 
         self.nums.append(num)
         self.lines.append(line)
