@@ -149,6 +149,7 @@ class Converter:
     def not_extracted_json_col_by_regexp(self, default_csv_line, line, line_number):
         '''
         :param line='NULL	Туту ЖД		NULL	2019-06-20 10:25:14'
+        :return "", "", "", ""
         '''
         problem = 'does not pares json field'
         self.problem_lines.add_problem(line_number, line, problem)
