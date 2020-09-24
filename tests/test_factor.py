@@ -80,6 +80,7 @@ class TestFactor(unittest.TestCase):
         expected_phone_2 = ['13', '10', '10', '11', '97', '', '71', '83', '10', '12']
         self.assertListEqual(result, expected_phone_2, 'incorrect default data')
 
+    @unittest.skip("demonstrating skipping")
     def test_get_phone_3(self):
         result = self.factor.get_phone_3(self.db_teach_factor)
         result = result.tolist()

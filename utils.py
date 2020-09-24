@@ -32,7 +32,8 @@ class RegPattern:
 
 class UtilsKy:
     # kyw3
-    PATH_DATA_KYW3 = '/mnt/files/workdata/work/merchants/merchant_33_kyw3_2020-06-05/04_experiments/ex_01_some_teach/'
+    PATH_KYW3 = '/mnt/files/workdata/work/merchants/merchant_33_kyw3_2020-06-05/'
+    PATH_DATA_KYW3 = PATH_KYW3 + '04_experiments/ex_01_some_teach/'
     DB_TEACH_KYW3 = PATH_DATA_KYW3 + 'db_teach_2_digit_status_kyw3_from_2019-11-20_to_2020-03-13.csv'
     DB_TEST_KYW3 = PATH_DATA_KYW3 + 'db_test_2_digit_status_kyw3a_from_2020-04-06_to_2020-05-06.csv'
     PATH_WHITE_KYW3 = '/mnt/files/workdata/work/merchants/merchant_33_kyw3_2020-06-05/08_white_lists/'
