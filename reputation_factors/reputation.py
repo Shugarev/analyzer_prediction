@@ -5,6 +5,14 @@ import pandas as pd
 class Reputation:
 
     def __init__(self, dt: pd.DataFrame, trusted_days=45, id='id'):
+        '''
+        self.status -  are {0,1}
+        self.date_only - str , example  2018-12-02
+        date_second - time in seconds, int
+        cb_date_second - time cb in seconds, int
+        if status is bad and the field date_cb_only is empty or None, then cb_date_second is negative int
+        for   example -9223372037
+        '''
         #TODO add amount
         col_names = [id, 'date', 'date_cb_only', 'status']
         df = dt[col_names].copy()
@@ -74,7 +82,7 @@ class Reputation:
         data = {'line_num': self.line_nums,
                 'n_previous': self.n_previouses,
                 'n_grey': self.n_greys,
-                'n_bads': self.n_bads,
+                'n_bad': self.n_bads,
                 'is_quick': self.is_quickes,
                 'is_first': self.is_first,
                 'n_in_day': self.n_in_days
