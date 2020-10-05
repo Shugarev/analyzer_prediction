@@ -144,9 +144,11 @@ class DataForTests:
     dates_rep = ['2019-01-01 12:20:12', '2020-01-01 17:12:11', '2020-01-10 15:50:20', '2020-01-20 10:01:05',
          '2020-03-10 12:10:10', '2020-04-10 12:14:15', '2020-05-10 15:12:03', '2020-05-10 14:11:01', '2020-05-10 15:32:05']
     dates_cb_only_rep = ['', '', '', '', '2020-04-01', '2020-05-01', '2020-06-01', '', '']
+    amount_rep = ['1.0', '2.0', '1.5', '3.0', '2.75', '3.00', '10', '2', '1']
     data_rep = {'id': ids_rep,
          'status': statuses_rep,
          'date': dates_rep,
-         'date_cb_only': dates_cb_only_rep
+         'date_cb_only': dates_cb_only_rep,
+         'amount': amount_rep
          }
     df_rep = pd.DataFrame(data=data_rep)

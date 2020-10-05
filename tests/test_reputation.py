@@ -48,22 +48,22 @@ class TestReputation(unittest.TestCase):
     def test_sort_data_check_date_second(self):
         reputation = Reputation(self.df)
         converted_df = reputation.df
-        date_second = converted_df.date_second.values
-        date_second = list(date_second)
+        date_seconds = converted_df.date_seconds.values
+        date_seconds = list(date_seconds)
         expected = [1577898731, 1578671420, 1579514465, 1583842210, 1586520855,  1546345212, 1589119861
             ,1589123523, 1589124725]
-        self.assertListEqual(date_second, expected, message_sort.format('date_second'))
+        self.assertListEqual(date_seconds, expected, message_sort.format('date_second'))
 
     def test_sort_data_check_date_cb_second(self):
         # TOO test failed after rename field cb_second -> fa
         reputation = Reputation(self.df)
         converted_df = reputation.df
-        date_cb_second = converted_df.cb_date_second.values
-        date_cb_second = list(date_cb_second)
+        date_cb_seconds = converted_df.date_cb_seconds.values
+        date_cb_seconds = list(date_cb_seconds)
 
         expected = [-9223372037,-9223372037, -9223372037, 1585699200, 1588291200, -9223372037, -9223372037
             , 1590969600, -9223372037]
-        self.assertListEqual(date_cb_second, expected, message_sort.format('date_cb_second'))
+        self.assertListEqual(date_cb_seconds, expected, message_sort.format('date_cb_second'))
 
     def create_factors_by_id(self):
         pass
@@ -93,19 +93,41 @@ class TestReputation(unittest.TestCase):
         reputation = Reputation(self.df)
         df_factors = reputation.create_reputation_factors()
         is_quick = list(df_factors.is_quick.values)
-        expected = [0, 0, 0, 0, 0, 0, 0, 0, 1]
+        expected = [-1, -1, 0, 0, 0, 0, 0, 0, 1]
         self.assertListEqual(is_quick, expected, message_factor.format('is-quick'))
 
-    def test_is_first_factor(self):
+    def test_is_new_factor(self):
         reputation = Reputation(self.df)
         df_factors = reputation.create_reputation_factors()
-        is_first = list(df_factors.is_first.values)
+        is_new = list(df_factors.is_new.values)
         expected = [1, 1, 0, 0, 0, 0, 0, 0, 0]
-        self.assertListEqual(is_first, expected, message_factor.format('is_first'))
+        self.assertListEqual(is_new, expected, message_factor.format('is_first'))
 
-    def test_n_in_day_factor(self):
+    def test_n_today_factor(self):
         reputation = Reputation(self.df)
         df_factors = reputation.create_reputation_factors()
-        n_in_day = list(df_factors.n_in_day.values)
+        n_today = list(df_factors.n_today.values)
         expected = [0, 0, 0, 0, 0, 0, 1, 0, 2]
-        self.assertListEqual(n_in_day, expected, message_factor.format('n_in_day'))
+        self.assertListEqual(n_today, expected, message_factor.format('n_in_day'))
+
+    def test_delta_sec(self):
+        reputation = Reputation(self.df)
+        df_factors = reputation.create_reputation_factors()
+        delta_sec = list(df_factors.delta_sec.values)
+        expected = [-1, -1, 772689, 843045, 4327745, 2678645, 3662, 42774649, 1202]
+        self.assertListEqual(delta_sec, expected, message_factor.format('n_in_day'))
+
+    def test_delta_days(self):
+        reputation = Reputation(self.df)
+        df_factors = reputation.create_reputation_factors()
+        delta_days = list(df_factors.delta_days.values)
+        expected = [-1, -1, 214, 234, 1202, 744, 1, 11881, 0]
+        self.assertListEqual(delta_days, expected, message_factor.format('n_in_day'))
+
+    def test_amount_dev(self):
+        reputation = Reputation(self.df)
+        df_factors = reputation.create_reputation_factors()
+        delta_days = list(df_factors.amount_dev.values)
+        amount_dev = [-1, -1,  8, 17, 13, 13, 67, 20, 2]
+        self.assertListEqual(delta_days, amount_dev, message_factor.format('n_in_day'))
+

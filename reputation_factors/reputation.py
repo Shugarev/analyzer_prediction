@@ -13,23 +13,19 @@ class Reputation:
         if status is bad and the field date_cb_only is empty or None, then cb_date_second is negative int
         for   example -9223372037
         '''
-        #TODO add amount
-        col_names = [id, 'date', 'date_cb_only', 'status']
+        col_names = [id, 'date', 'date_cb_only', 'status', 'amount']
+
         df = dt[col_names].copy()
         if id != 'id':
             df = df.rename(columns={id: "id"})
 
         df['date_only'] = df.date.str[:10]
 
-        df['date_second'] = pd.to_datetime(df.date)
-        df.date_second = df.date_second.astype(np.int64) // 10 ** 9
+        df['date_seconds'] = pd.to_datetime(df.date)
+        df.date_seconds = df.date_seconds.astype(np.int64) // 10 ** 9
 
-        # TODO cb_date_second  -> date_cb_second
-        # TODO cb_date_seconds -> date_cb_seconds
-        #
-
-        df['cb_date_second'] = pd.to_datetime(df.date_cb_only)
-        df.cb_date_second = df.cb_date_second.astype(np.int64) // 10 ** 9
+        df['date_cb_seconds'] = pd.to_datetime(df.date_cb_only)
+        df.date_cb_seconds = df.date_cb_seconds.astype(np.int64) // 10 ** 9
 
         df['line_num'] = range(df.shape[0])
 
@@ -42,14 +38,16 @@ class Reputation:
 
         self.line_nums = df.line_num.values
         self.ids = df.id.values
-       # TODO add amount
-       # self.amount = df.amoount.values
+
+        df.amount = pd.to_numeric(df.amount, errors="coerce")
+        self.amount = df.amount.values
+
         self.statuses = df.status.values
 
         self.date_only = df.date_only.values
 
-        self.date_seconds = df.date_second.values
-        self.cb_date_seconds = df.cb_date_second.values
+        self.date_seconds = df.date_seconds.values
+        self.date_cb_seconds = df.date_cb_seconds.values
 
         self.trusted_days = trusted_days
         self.one_hour_seconds = 60 * 60
@@ -57,26 +55,34 @@ class Reputation:
         self.trusted_seconds = trusted_days * self.one_day_seconds
 
     def get_current_data(self, line_num):
-        return self.date_seconds[line_num], self.cb_date_seconds[line_num], self.date_only[line_num], self.date_seconds[line_num - 1]
+        return self.date_seconds[line_num], self.date_cb_seconds[line_num], self.date_only[line_num]\
+            , self.amount[line_num], self.date_seconds[line_num - 1]
 
     def get_data_by_line_num(self, line_num):
-        return self.date_seconds[line_num], self.cb_date_seconds[line_num], self.date_only[line_num], self.statuses[line_num]
+        return self.date_seconds[line_num], self.date_cb_seconds[line_num], self.date_only[line_num]\
+            , self.amount[line_num], self.statuses[line_num]
 
     def clear_factors_data(self):
         self.n_previouses = []
         self.n_greys = []
         self.n_bads = []
         self.is_quickes = []
-        self.is_first = []
-        self.n_in_days = []
+        self.is_new = []
+        self.n_today = []
+        self.delta_sec = []
+        self.delta_days = []
+        self.amount_deviation = []
 
-    def add_values(self, n_previous, n_grey, n_bad, is_quick, is_first, n_in_day):
+    def add_values(self, n_previous, n_grey, n_bad, is_quick, is_new, n_today, delta_sec, delta_days, amount_deviation):
         self.n_previouses.append(n_previous)
         self.n_greys.append(n_grey)
         self.n_bads.append(n_bad)
         self.is_quickes.append(is_quick)
-        self.is_first.append(is_first)
-        self.n_in_days.append(n_in_day)
+        self.is_new.append(is_new)
+        self.n_today.append(n_today)
+        self.delta_sec.append(delta_sec)
+        self.delta_days.append(delta_days)
+        self.amount_deviation.append(amount_deviation)
 
     def get_factor_as_df(self):
         data = {'line_num': self.line_nums,
@@ -84,10 +90,15 @@ class Reputation:
                 'n_grey': self.n_greys,
                 'n_bad': self.n_bads,
                 'is_quick': self.is_quickes,
-                'is_first': self.is_first,
-                'n_in_day': self.n_in_days
+                'is_new': self.is_new,
+                'n_today': self.n_today,
+                'delta_sec': self.delta_sec,
+                'delta_days': self.delta_days,
+                'amount_dev': self.amount_deviation
                 }
+
         df = pd.DataFrame(data).sort_values(by='line_num')
+        df = df.reset_index()
         return df
 
     def create_factors_by_id(self, n_start_id, n_end_id):
@@ -100,23 +111,32 @@ class Reputation:
         for i in range(n_end_id - n_start_id + 1):
             n_grey = 0
             n_bad = 0
-            n_in_day = 0
+            n_today = 0
             n_previous = i
             if i == 0:
-                is_first = 1
-                is_quick = 0
+                is_new = 1
+                is_quick = -1
+                delta_sec = -1
+                delta_days = -1
+                amount_diviation = -1
+
             else:
                 n_current_line = i + n_start_id
 
-                current_date_sec, current_cb_date_sec, current_date_only, previous_date_sec = self.get_current_data(n_current_line)
+                current_date_sec, current_cb_date_sec, current_date_only, current_amount, previous_date_sec = \
+                    self.get_current_data(n_current_line)
 
-                is_first = 0
+                is_new = 0
                 is_quick = 1 if current_date_sec - previous_date_sec < one_hour_seconds else 0
 
+                delta_sec = current_date_sec - previous_date_sec
+                delta_days = int(delta_sec / one_hour_seconds)
+
+                amount_sum = 0
                 for k in range(i):
                     line_num = k + n_start_id
 
-                    date_sec, cb_date_sec, date_only, status = self.get_data_by_line_num(line_num)
+                    date_sec, cb_date_sec, date_only, amount, status = self.get_data_by_line_num(line_num)
 
                     if status == status_bad and cb_date_sec < current_date_sec:
                         n_bad += 1
@@ -126,11 +146,13 @@ class Reputation:
                         n_grey += 1
 
                     if date_only == current_date_only:
-                        n_in_day += 1
+                        n_today += 1
 
-            self.add_values(n_previous, n_grey, n_bad, is_quick, is_first, n_in_day)
-            #print('n_previous={}, n_grey={}, n_bad={}, is_quick={}, is_first={}'.format(i, n_grey, n_bad, is_quick,  is_first))
-        return
+                    amount_sum += amount
+
+                amount_diviation = int(round(10 * i * current_amount / amount_sum))
+
+            self.add_values(n_previous, n_grey, n_bad, is_quick, is_new, n_today, delta_sec, delta_days, amount_diviation)
 
     def create_reputation_factors(self):
         self.clear_factors_data()
