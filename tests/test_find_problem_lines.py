@@ -1,6 +1,6 @@
 import unittest
 
-from find_problem_lines import show_problems_in_line, show_problem_lines_v2
+from read_csv_example.find_problem_lines import show_problems_in_line, show_problem_lines_v2
 from tests.data_for_tests import DataForTests
 
 

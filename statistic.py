@@ -29,8 +29,7 @@ class Statistic:
     @classmethod
     def get_cb_rate_amount(cls, dt: pd.DataFrame) -> float:
         dt_bad = cls.get_dt_bad(dt)
-        dt.amount = pd.to_numeric(dt.amount, errors="coerce")
-        amount_dt = sum(dt.amount)
+        amount_dt = sum(pd.to_numeric(dt.amount, errors="coerce"))
         amount_dt_bad = sum(pd.to_numeric(dt_bad.amount))
         result = round(100 * amount_dt_bad / amount_dt, 2)
         return result
@@ -59,6 +58,7 @@ class Statistic:
 
     @classmethod
     def get_stat_summarise_by_column(cls, dt: pd.DataFrame, col_name: str, date_to_summarise=False) -> pd.DataFrame:
+        dt = dt.copy()
         dt.amount = pd.to_numeric(dt.amount, errors="coerce")
         dt['amount_cb'] = np.where(cls.is_status_bad(dt), dt.amount, 0)
         dt_bad = cls.get_dt_bad(dt)
