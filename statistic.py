@@ -114,11 +114,19 @@ class Statistic:
         return all_st[col_names].corr(method)
 
     @classmethod
-    def get_correlation_summarise_all_factors(cls, dt_1: pd.DataFrame, dt_2: pd.DataFrame) -> pd.DataFrame:
+    def get_correlation_summarise_all_factors(cls, dt_1: pd.DataFrame, dt_2: pd.DataFrame, method='kendall')\
+            -> pd.DataFrame:
+        '''
+        :param method:
+         Method of correlation:
+            pearson : standard correlation coefficient
+            kendall : Kendall Tau correlation coefficient
+            spearman : Spearman rank correlation
+        '''
         result_df = pd.DataFrame(columns=['name', 'value'])
         col_list = dt_1.columns[dt_1.columns.isin(dt_2)]
         for col in col_list:
-            st = Statistic.get_correlation_summarise(dt_1, dt_2, col)
+            st = Statistic.get_correlation_summarise(dt_1, dt_2,factor_name=col, method=method)
             row = {"name": col, "value": st.iloc[0, 1]}
             result_df = result_df.append(row, ignore_index=True)
         return result_df
