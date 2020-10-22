@@ -32,6 +32,8 @@ class RegPattern:
 
 class UtilsKy:
     # kyw3
+    MEAN_MODEL_VALUES = [5.76, 12.21, 15.61, 17.71, 19.54, 21.09, 22.35, 26.37, 40.04, 137.23]
+    BEST_FACTORS = ['amount', 'bank_currency', 'hour', 'day_of_week', 'bin', 'longitude', 'latitude', 'phone_2_norm']
     PATH_KYW3 = '/mnt/files/workdata/work/merchants/merchant_33_kyw3_2020-06-05/'
     PATH_DATA_KYW3 = PATH_KYW3 + '04_experiments/ex_01_some_teach/'
     DB_TEACH_KYW3 = PATH_DATA_KYW3 + 'db_teach_2_digit_status_kyw3_from_2019-11-20_to_2020-03-13.csv'
@@ -40,6 +42,7 @@ class UtilsKy:
     WHITE_KYW3 = PATH_WHITE_KYW3 + 'white_list_kyw3_expeiment1_trusted_2020-02-20.csv'
 
     # ky9
+    PATH_KY9 = '/mnt/files/workdata/work/merchants/merchant_32_ky9_2020-05-12_white_visa/'
     PATH_DATA_KY9 = '/mnt/files/workdata/work/merchants/merchant_32_ky9_2020-05-12_white_visa/04_experiments' \
                     '/ex_05_ky9_xgb_jupiter_2020_07_08/'
     DB_TEACH_KY9 = PATH_DATA_KY9 + 'db_teach_xgb_ky9.csv'
