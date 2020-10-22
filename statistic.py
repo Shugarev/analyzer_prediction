@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import random
 from collections import Counter
+from sklearn.model_selection import train_test_split
 
 
 class Statistic:
@@ -64,8 +65,8 @@ class Statistic:
         dt_bad = cls.get_dt_bad(dt)
         dt_good = cls.get_dt_good(dt)
 
-        mean_dt_bad = dt_bad.amount.mean()/20
-        mean_dt_good = dt_good.amount.mean()/20
+        mean_dt_bad = dt_bad.amount.mean() / 20
+        mean_dt_good = dt_good.amount.mean() / 20
 
         all_bad_amount = sum(dt_bad.amount)
         all_good_amount = sum(dt_good.amount)
@@ -88,13 +89,14 @@ class Statistic:
         stat_dt['cb_rate'] = round(100 * stat_dt.n_bad / stat_dt.n, 4)
         stat_dt['cb_rate_amount'] = round(100 * stat_dt.amount_bad / stat_dt.amount_total, 4)
 
-        stat_dt['true_amount_weight'] = (stat_dt.amount_bad + mean_dt_bad)/(all_bad_amount + mean_dt_bad)
-        stat_dt['false_amount_weight'] = (stat_dt.amount_total - stat_dt.amount_bad + mean_dt_good)/(all_good_amount +
-                                                                                                     mean_dt_good)
-        stat_dt['true_weight'] = (stat_dt.n_bad + 1)/(all_bad + 1)
-        stat_dt['false_weight'] = (stat_dt.n - stat_dt.n_bad + 1)/(all_good + 1)
+        stat_dt['true_amount_weight'] = (stat_dt.amount_bad + mean_dt_bad) / (all_bad_amount + mean_dt_bad)
+        stat_dt['false_amount_weight'] = (stat_dt.amount_total - stat_dt.amount_bad + mean_dt_good) / (all_good_amount +
+                                                                                                       mean_dt_good)
+        stat_dt['true_weight'] = (stat_dt.n_bad + 1) / (all_bad + 1)
+        stat_dt['false_weight'] = (stat_dt.n - stat_dt.n_bad + 1) / (all_good + 1)
 
-        stat_dt['p'] = np.where(stat_dt.n_bad > 0, stat_dt.true_weight/(stat_dt.true_weight + stat_dt.false_weight), 0)
+        stat_dt['p'] = np.where(stat_dt.n_bad > 0, stat_dt.true_weight / (stat_dt.true_weight + stat_dt.false_weight),
+                                0)
         stat_dt['p_a'] = np.where(stat_dt.n_bad > 0, stat_dt.true_amount_weight / (stat_dt.true_amount_weight +
                                                                                    stat_dt.false_amount_weight), 0)
         return stat_dt
@@ -114,7 +116,7 @@ class Statistic:
         return all_st[col_names].corr(method)
 
     @classmethod
-    def get_correlation_summarise_all_factors(cls, dt_1: pd.DataFrame, dt_2: pd.DataFrame, method='kendall')\
+    def get_correlation_summarise_all_factors(cls, dt_1: pd.DataFrame, dt_2: pd.DataFrame, method='kendall') \
             -> pd.DataFrame:
         '''
         :param method:
@@ -126,7 +128,54 @@ class Statistic:
         result_df = pd.DataFrame(columns=['name', 'value'])
         col_list = dt_1.columns[dt_1.columns.isin(dt_2)]
         for col in col_list:
-            st = Statistic.get_correlation_summarise(dt_1, dt_2,factor_name=col, method=method)
+            st = Statistic.get_correlation_summarise(dt_1, dt_2, factor_name=col, method=method)
             row = {"name": col, "value": st.iloc[0, 1]}
             result_df = result_df.append(row, ignore_index=True)
         return result_df
+
+    @classmethod
+    def train_test_split_with_diff_ids(cls, dt: pd.DataFrame, train_size=0.8, random_state=4321, test_has_unique_ids=False):
+        '''
+        Split dataframe into random train and test subsets.
+        Train and test have no common bad ids.
+
+        '''
+
+        if 'id' not in list(dt):
+            raise Exception("There is no id in dataframe.")
+
+        df_good = Statistic.get_dt_good(dt).copy()
+        df_bad = Statistic.get_dt_bad(dt).copy()
+
+        bad_ids = df_bad.id.unique()
+        trian_bad_id, test_bad_id = train_test_split(bad_ids, train_size=train_size, random_state=random_state)
+
+        mask = df_bad.id.isin(trian_bad_id)
+        X_train_bad = df_bad[mask].copy()
+
+        mask = df_bad.id.isin(test_bad_id)
+        X_test_bad = df_bad[mask].copy()
+
+        if not test_has_unique_ids:
+            X_train_good, X_test_good = train_test_split(df_good, train_size=train_size, random_state=random_state)
+        else:
+            good_ids = df_good.id.unique()
+            trian_good_id, test_good_id = train_test_split(good_ids, train_size=train_size, random_state=random_state)
+
+            mask = df_good.id.isin(trian_good_id)
+            X_train_good = df_good[mask]
+
+            mask = df_good.id.isin(test_good_id)
+            X_test_good = df_good[mask]
+
+        drop_column = ['id', 'status']
+
+        X_train = pd.concat([X_train_bad, X_train_good])
+        y_train = X_train.status
+        X_train.drop(columns=drop_column, inplace=True)
+
+        X_test = pd.concat([X_test_bad, X_test_good])
+        y_test = X_test.status
+        X_test.drop(columns=drop_column, inplace=True)
+
+        return X_train, X_test, y_train, y_test
