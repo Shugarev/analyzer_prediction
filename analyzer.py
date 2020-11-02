@@ -27,7 +27,7 @@ class HelperAnalyzer:
         self.AMOUNT_TEST_IN_WL = sum(test_in_wl.amount)
         self.N_TEST_IN_WL = test_in_wl.shape[0]
 
-        mask = (test.id.isin(white_list.ID)) | (test.status.isin(bad_statuses))
+        mask = (test.id.isin(white_list.ID)) & (test.status.isin(bad_statuses))
         test_bad_in_wl = test[mask]
 
         self.N_TEST_BAD_IN_WL = test_bad_in_wl.shape[0]

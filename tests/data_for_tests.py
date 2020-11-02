@@ -33,9 +33,9 @@ class DataForTests:
         , 'n_teach', 'n_teach_bad', 'n_test', 'n_test_bad', 'amount_test_bad', 'amount_test']
 
     EXPECTED_ROW = {'amount_test': 711.04999999999995, 'amount_test_bad': 330.41000000000003
-        , 'amount_test_bad_in_wl': 589.25999999999999, 'amount_test_in_wl': 303.33000000000004
+        , 'amount_test_bad_in_wl': 44.48, 'amount_test_in_wl': 303.33000000000004
         , 'description': 'Test1', 'n_teach': 10, 'n_teach_bad': 4, 'n_test': 10, 'n_test_bad': 4
-        , 'n_test_bad_in_wl': 6, 'n_test_in_wl': 4, 'n_white_list': 3}
+        , 'n_test_bad_in_wl': 2, 'n_test_in_wl': 4, 'n_white_list': 3}
 
     DB_TEST = {'id': {0: '427082******7013_2023-03', 8: '406032******1745_2021-07', 5: '483316******8724_2021-03'
         , 6: '483316******8724_2021-03', 4: '407204******7425_2020-12', 7: '406032******1745_2021-07'
@@ -55,9 +55,9 @@ class DataForTests:
                           'p_5': {0: 0.0, 1: 0.0}, 'p_6': {0: 25.0, 1: 0.96}
         , 'p_7': {0: 25.0, 1: 0.96}, 'p_10': {0: 25.0, 1: 0.96}, 'p_20': {0: 50.0, 1: 0.76},
                           'rating': {0: 75.0, 1: 75.0}
-        , 'n_white_list': {0: 3, 1: 3}, 'n_test_in_wl': {0: 4, 1: 4}, 'n_test_bad_in_wl': {0: 6, 1: 6}
+        , 'n_white_list': {0: 3, 1: 3}, 'n_test_in_wl': {0: 4, 1: 4}, 'n_test_bad_in_wl': {0: 2, 1: 2}
         , 'amount_test_in_wl': {0: 303.33000000000004, 1: 303.33000000000004}
-        , 'amount_test_bad_in_wl': {0: 589.26, 1: 589.26}, 'n_teach': {0: 10, 1: 10}, 'n_teach_bad': {0: 4, 1: 4}
+        , 'amount_test_bad_in_wl': {0: 44.48, 1: 44.48}, 'n_teach': {0: 10, 1: 10}, 'n_teach_bad': {0: 4, 1: 4}
         , 'n_test': {0: 10, 1: 10}, 'n_test_bad': {0: 4, 1: 4}, 'amount_test_bad': {0: 330.41, 1: 330.41}
         , 'amount_test': {0: 711.05, 1: 711.05}}
 

@@ -74,11 +74,18 @@ def get_phone_3(x: str)->str:
     x = re.sub("\\D", "", str(x))
     return x[:3]
 
+def get_quantile(x, q_amount):
+    n = len(q_amount)
+    for i in range(1, n):
+        if q_amount[i - 1] <= x < q_amount[i]:
+            return i
+    return n
+
 
 class Factor:
 
     @classmethod
-    def is_only_digit(cls, dt: pd.DataFrame,  col_name='zip')-> pd.Series:
+    def is_only_digit(cls, dt: pd.DataFrame, col_name='zip')-> pd.Series:
         return dt[col_name].apply(lambda x: is_only_digit(x))
 
     @classmethod
@@ -103,7 +110,7 @@ class Factor:
         return dt[col_name].apply(lambda x: get_network(x))
 
     @classmethod
-    def is_net_frequency(cls, teach: pd.DataFrame,  test: pd.DataFrame, threshold=10, col_name='ip'):
+    def is_net_frequency(cls, teach: pd.DataFrame, test: pd.DataFrame, threshold=10, col_name='ip'):
         col_net = 'net'
         col_is = 'is_fr_net'
         teach[col_net] = cls.get_network(teach, col_name)
@@ -154,3 +161,13 @@ class Factor:
     def get_phone_3(cls, dt: pd.DataFrame, col_name='phone') -> pd.Series:
         return dt[col_name].apply(lambda x: get_phone_3(x))
 
+    @classmethod
+    def set_amount_quantiles(cls, db_teach: pd.DataFrame, db_test: pd.DataFrame,
+                                                                            quantiles=[0.15, 0.25, 0.50, 0.75, 0.90]):
+        db_teach.amount = pd.to_numeric(db_teach.amount, errors="coerce")
+        db_test.amount = pd.to_numeric(db_test.amount, errors="coerce")
+        amount_np = db_teach.amount.values
+        q_amount = [np.quantile(amount_np, q) for q in quantiles]
+        q_amount = [0] + q_amount
+        db_teach['amount_quntile'] = db_teach.amount.apply(lambda x: get_quantile(x, q_amount))
+        db_test['amount_quntile'] = db_test.amount.apply(lambda x: get_quantile(x, q_amount))
