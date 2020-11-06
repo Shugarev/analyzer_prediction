@@ -98,7 +98,6 @@ class TestFactor(unittest.TestCase):
         x = get_quantile(0.95, q_amount)
         self.assertEqual(x, 4, message.format(x))
 
-
     def test_set_amount_quantiles(self):
         message = "incorrect amount quantiles for {}"
         db_teach = pd.DataFrame({"amount": [100, 50, 80, 30, 20, 40, 50]})

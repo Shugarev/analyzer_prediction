@@ -179,3 +179,23 @@ class Statistic:
         X_test.drop(columns=drop_column, inplace=True)
 
         return X_train, X_test, y_train, y_test
+
+    @classmethod
+    def get_quantile_stat(cls, dt: pd.DataFrame, col_name: str):
+        dt = dt.copy()
+        dt['is_status_bad'] = np.where(cls.is_status_bad(dt), 1, 0)
+
+        data = {'amount': ['count', 'mean', 'std',
+                           ('q1', lambda x: x.quantile(0.25)), 'median',
+                           ('q3', lambda x: x.quantile(0.75))],
+                            'is_status_bad': 'sum'}
+
+        dt.amount = pd.to_numeric(dt.amount)
+        dt = dt.groupby(col_name).agg(data)
+        dt.columns = ['n', 'mean', 'std', 'q1', 'median', 'q3', 'n_bad']
+        dt.sort_values(by='n', ascending=False, inplace=True)
+        col_names = list(dt.columns)
+        col_names = col_names[-1:] + col_names[:-1]
+        return dt.loc[:, col_names]
+
+

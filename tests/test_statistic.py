@@ -101,3 +101,11 @@ class TestStatistic(unittest.TestCase):
         s_intersect = list(set(train_good_ids) & set(validate_good_ids))
 
         self.assertEqual(len(s_intersect), 0, 'X_train, X_validation have common good ids.'.format(s_intersect))
+
+    def test_get_quantile_stat(self):
+        df = DataForTests.db_teach
+        result = Statistic.get_quantile_stat(df, 'bin')
+        expected_id = DataForTests.data_st
+        result = result.to_dict()
+        self.assertDictEqual(result, expected_id, 'incorrect default data')
+

@@ -46,9 +46,6 @@ class Bayes:
                 st.false_weight = np.where(st.n_bad == 0, 1, st.false_amount_weight)
                 st.true_weight = np.where(st.n_bad == 0, 1, st.true_amount_weight)
 
-                #st.false_weight = np.where((st.n_bad == 0) & (st.n > 15), 1.1, st.false_amount_weight)
-
-
             data = {col: list(st.index), col_good: st.false_weight.values, col_bad: st.true_weight.values}
             df = pd.DataFrame(data)
             model_bayes[col] = df
@@ -97,4 +94,54 @@ class Bayes:
         classzero_probs = 1.0 - classone_probs
         return np.vstack((classzero_probs, classone_probs)).transpose()
 
+    def get_feature_importance(self, db_teach, col_names=ALL):
+        db_teach = db_teach.copy()
+        if 'amount' not in list(db_teach):
+            db_teach['amount'] = 1
 
+        if col_names.__class__ == str and col_names == ALL:
+            col_names = list(db_teach)
+
+        factor_list = self.get_list_factors(col_names)
+
+        feature_importance = []
+        n_unique = []
+
+        for f in factor_list:
+            st = Statistic.get_stat_summarise_by_column(db_teach, f)
+            value = (st.p - 0.5).abs().sum()
+            feature_importance.append(value)
+            n_unique.append(st.shape[0])
+
+        data = {'feature': factor_list, 'feature_importance': feature_importance, 'n_unique': n_unique}
+        df = pd.DataFrame(data)
+        df.sort_values(by='feature_importance', ascending=False , inplace=True)
+        return df
+
+    def compare_factor_teach_test(self, db_teach, db_test, col_names=ALL):
+        db_teach = db_teach.copy()
+        db_test = db_test.copy()
+
+        if 'amount' not in list(db_teach):
+            db_teach['amount'] = 1
+        if 'amount' not in list(db_test):
+            db_test['amount'] = 1
+
+        if col_names.__class__ == str and col_names == ALL:
+            col_names = list(db_teach)
+        factor_list = self.get_list_factors(col_names)
+
+        compare_diff = []
+
+        for f in factor_list:
+            st_teach = Statistic.get_stat_summarise_by_column(db_teach, f)
+            st_test = Statistic.get_stat_summarise_by_column(db_test, f)
+            st = st_test.merge(st_teach, left_index=True, right_index=True, how='left')
+            st.p_y = st.p_y.fillna(0.5)
+            diff_val = ((st.p_x - st.p_y) * st.n_x).abs().sum()
+            compare_diff.append(diff_val)
+
+        data = {'factor': factor_list, 'compare_diff': compare_diff}
+        df = pd.DataFrame(data)
+        df.sort_values(by='compare_diff', ascending=False, inplace=True)
+        return df
