@@ -81,6 +81,16 @@ def get_quantile(x, q_amount):
             return i
     return n
 
+def get_case(x: str) -> str:
+    if not isinstance(x, str):
+        x = ''
+    if x.islower() and x.isupper():
+        return 'case'    
+    if x.islower():
+        return 'lowercase'
+    if x.isupper():
+        return 'uppercase'
+    return 'mixed'
 
 class Factor:
 
@@ -171,3 +181,11 @@ class Factor:
         q_amount = [0] + q_amount
         db_teach['amount_quntile'] = db_teach.amount.apply(lambda x: get_quantile(x, q_amount))
         db_test['amount_quntile'] = db_test.amount.apply(lambda x: get_quantile(x, q_amount))
+
+    @classmethod        
+    def get_case(cls, dt, col_name='addr') -> pd.Series:
+        return dt[col_name].apply(lambda x: get_case(x))
+    
+    @classmethod        
+    def get_first_numerals(cls, dt, col_name='address') -> pd.Series:
+        return  np.where(dt[col_name].str.contains('^[0-9]'), 1, 0)

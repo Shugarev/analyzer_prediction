@@ -198,4 +198,16 @@ class Statistic:
         col_names = col_names[-1:] + col_names[:-1]
         return dt.loc[:, col_names]
 
-
+    @classmethod
+    def get_spreadsheet_table(cls, dt: pd.DataFrame, index_name: str, col_names: str, col_values='status',
+                              fun_values=sum):
+        '''
+        :param dt: pandas DataFrame
+        :param index_name: column with a lot of values
+        :param col_names: column with a few of values
+        :param col_values: column to aggregate values
+        :param fun_values: column to apply function for values (default=sum, min, max, mean and other)
+        :return: pandas DataFrame with aggregate data
+        '''
+        return dt.reset_index().pivot_table(index=index_name, columns=col_names,
+                                            values=col_values, aggfunc=fun_values, fill_value=0)

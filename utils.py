@@ -43,10 +43,9 @@ class UtilsKy:
 
     # ky9
     PATH_KY9 = '/mnt/files/workdata/work/merchants/merchant_32_ky9_2020-05-12_white_visa/'
-    PATH_DATA_KY9 = '/mnt/files/workdata/work/merchants/merchant_32_ky9_2020-05-12_white_visa/04_experiments' \
-                    '/ex_05_ky9_xgb_jupiter_2020_07_08/'
-    DB_TEACH_KY9 = PATH_DATA_KY9 + 'db_teach_xgb_ky9.csv'
-    DB_TEST_KY9 = PATH_DATA_KY9 + 'db_test_xgb_ky9.csv'
+    PATH_DATA_KY9 = '/mnt/files/workdata/work/merchants/merchant_32_ky9_2020-05-12_white_visa/04_experiments/'
+    DB_TEACH_KY9 = PATH_DATA_KY9 + 'db_teach_2018-12-19_2020-02-28.csv'
+    DB_TEST_KY9 = PATH_DATA_KY9 + 'db_test_2020-03-23_2020-04-22.csv'
     DB_TEACH_KY9_ALL = '/mnt/files/workdata/work/merchants/merchant_32_ky9_2020-05-12_white_visa' \
                        '/04_experiments/ex_02_description/db_teach_700th_ky9_2018-12-19_2020-01-12.csv'
 
