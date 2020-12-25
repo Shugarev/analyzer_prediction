@@ -65,9 +65,6 @@ class TestReputation(unittest.TestCase):
             , 1590969600, -9223372037]
         self.assertListEqual(date_cb_seconds, expected, message_sort.format('date_cb_second'))
 
-    def create_factors_by_id(self):
-        pass
-
     def test_n_previous_factor(self):
         reputation = Reputation(self.df)
         df_factors = reputation.create_reputation_factors()
@@ -108,26 +105,31 @@ class TestReputation(unittest.TestCase):
         df_factors = reputation.create_reputation_factors()
         n_today = list(df_factors.n_today.values)
         expected = [0, 0, 0, 0, 0, 0, 1, 0, 2]
-        self.assertListEqual(n_today, expected, message_factor.format('n_in_day'))
+        self.assertListEqual(n_today, expected, message_factor.format('n_today'))
 
     def test_delta_sec(self):
         reputation = Reputation(self.df)
         df_factors = reputation.create_reputation_factors()
         delta_sec = list(df_factors.delta_sec.values)
         expected = [-1, -1, 772689, 843045, 4327745, 2678645, 3662, 42774649, 1202]
-        self.assertListEqual(delta_sec, expected, message_factor.format('n_in_day'))
+        self.assertListEqual(delta_sec, expected, message_factor.format('delta_sec'))
 
     def test_delta_days(self):
         reputation = Reputation(self.df)
         df_factors = reputation.create_reputation_factors()
         delta_days = list(df_factors.delta_days.values)
         expected = [-1, -1, 214, 234, 1202, 744, 1, 11881, 0]
-        self.assertListEqual(delta_days, expected, message_factor.format('n_in_day'))
+        self.assertListEqual(delta_days, expected, message_factor.format('delta_days'))
 
     def test_amount_dev(self):
         reputation = Reputation(self.df)
         df_factors = reputation.create_reputation_factors()
-        delta_days = list(df_factors.amount_dev.values)
-        amount_dev = [-1, -1,  8, 17, 13, 13, 67, 20, 2]
-        self.assertListEqual(delta_days, amount_dev, message_factor.format('n_in_day'))
+        amount_dev = list(df_factors.amount_dev.values)
+        expected = [-1, -1,  8, 17, 13, 13, 67, 20, 2]
+        self.assertListEqual(amount_dev, expected, message_factor.format('amount_dev'))
 
+    def test_create_reputation_factors(self):
+        reputation = Reputation(self.df)
+        dt = reputation.create_reputation_factors()
+        expected = DataForTests.data_reputation_factors
+        self.assertDictEqual(dt.to_dict(), expected, message_factor.format('create_reputation_factors'))

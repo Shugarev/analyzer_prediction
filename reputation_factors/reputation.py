@@ -25,7 +25,7 @@ class Reputation:
         df.date_seconds = df.date_seconds.astype(np.int64) // 10 ** 9
 
         df['date_cb_seconds'] = pd.to_datetime(df.date_cb_only)
-        df.date_cb_seconds = df.date_cb_seconds.astype(np.int64) // 10 ** 9
+        df.date_cb_seconds = pd.to_numeric(df.date_cb_seconds) // 10 ** 9
 
         df['line_num'] = range(df.shape[0])
 

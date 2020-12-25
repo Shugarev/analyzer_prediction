@@ -94,7 +94,6 @@ class TestConverterJson(unittest.TestCase):
 
     def test_correct_json_load(self):
         result = Converter.correct_json_load(self.str_adds_quotes)
-        print(result)
         expected = '{"is_trailer":"false","user_agent":"Mozilla/5.0 rv:52.0", "has_middle_name ":"true",' \
                    '"insurance_selected":"null"}'
         self.assertEqual(result, expected, 'incorrect default data')
@@ -165,7 +164,6 @@ class TestConverterJson(unittest.TestCase):
         line_number = -1
         line = 'NULL	Туту ЖД		NULL	2019-06-20 10:25:14'
         result = converter.not_extracted_json_col_by_regexp(default_csv_line, line, line_number)
-        print(result)
         expected = ''
         self.assertEqual(result, expected, 'incorrect default data')
 
@@ -175,7 +173,5 @@ class TestConverterJson(unittest.TestCase):
         line_number = -1
         line = '2333 Туту ЖД {"order":{"id":"111111111"},"client":{"email":"aaaa@gmail.com"}} 2019-06-20 10:25:14'
         result = converter.not_extracted_json_col_by_regexp(default_csv_line, line, line_number)
-        print(result)
         expected = ''
         self.assertEqual(result, expected, 'incorrect default data')
-        pass

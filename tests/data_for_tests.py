@@ -32,6 +32,10 @@ class DataForTests:
         , 'n_white_list', 'n_test_in_wl', 'n_test_bad_in_wl', 'amount_test_in_wl', 'amount_test_bad_in_wl'
         , 'n_teach', 'n_teach_bad', 'n_test', 'n_test_bad', 'amount_test_bad', 'amount_test']
 
+    COL_NAMES_2 = ['description', 'p_1', 'p_5', 'p_10', 'p_15', 'p_50', 'rating'
+        , 'n_white_list', 'n_test_in_wl', 'n_test_bad_in_wl', 'amount_test_in_wl', 'amount_test_bad_in_wl'
+        , 'n_teach', 'n_teach_bad', 'n_test', 'n_test_bad', 'amount_test_bad', 'amount_test']
+
     EXPECTED_ROW = {'amount_test': 711.04999999999995, 'amount_test_bad': 330.41000000000003
         , 'amount_test_bad_in_wl': 44.48, 'amount_test_in_wl': 303.33000000000004
         , 'description': 'Test1', 'n_teach': 10, 'n_teach_bad': 4, 'n_test': 10, 'n_test_bad': 4
@@ -154,6 +158,20 @@ class DataForTests:
                 }
     df_rep = pd.DataFrame(data=data_rep)
 
+    data_reputation_factors = {'index': {0: 5, 1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 7, 7: 6, 8: 8},
+                               'line_num': {0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 8},
+                               'n_previous': {0: 0, 1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 2, 7: 1, 8: 3},
+                               'n_grey': {0: 0, 1: 0, 2: 0, 3: 0, 4: 3, 5: 3, 6: 1, 7: 1, 8: 1},
+                               'n_bad': {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 1, 6: 0, 7: 0, 8: 0},
+                               'is_quick': {0: -1, 1: -1, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 1},
+                               'is_new': {0: 1, 1: 1, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0},
+                               'n_today': {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 1, 7: 0, 8: 2},
+                               'delta_sec': {0: -1, 1: -1, 2: 772689, 3: 843045, 4: 4327745, 5: 2678645, 6: 3662,
+                                             7: 42774649, 8: 1202},
+                               'delta_days': {0: -1, 1: -1, 2: 214, 3: 234, 4: 1202, 5: 744, 6: 1, 7: 11881, 8: 0},
+                               'amount_dev': {0: -1, 1: -1, 2: 8, 3: 17, 4: 13, 5: 13, 6: 67, 7: 20, 8: 2}
+                               }
+
     #  ------------------------------------------------------------------------- Split test ------------------------
 
     id3 = '466555******0666_2022-11'
@@ -190,3 +208,4 @@ class DataForTests:
 
     compare_res = {'factor': {0: 'id', 2: 'probability', 1: 'bin'}, 'compare_diff': {0: 4.4502659363340475,
                                                                             2: 4.123839009287925, 1: 0.603590045584418}}
+

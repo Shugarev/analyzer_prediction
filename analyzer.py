@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from statistic import Statistic
-
+from utils import Constant
 
 class HelperAnalyzer:
 
@@ -52,22 +52,26 @@ class AnalyzerPrediction:
         return result
 
     @classmethod
-    def get_empty_white_list(cls)-> pd.DataFrame:
+    def get_empty_white_list(cls) -> pd.DataFrame:
         return pd.DataFrame(columns=['ID'])
 
     @classmethod
-    def get_empty_prediction_df(cls) -> pd.DataFrame:
-        result_df = pd.DataFrame(
-            columns=['description', 'p_1', 'p_2', 'p_3', 'p_4', 'p_5'
-                , 'p_6', 'p_7', 'p_10', 'p_20', 'rating'
-                , 'n_white_list', 'n_test_in_wl', 'n_test_bad_in_wl'
-                , 'amount_test_in_wl', 'amount_test_bad_in_wl'
-                , 'n_teach', 'n_teach_bad'
-                , 'n_test', 'n_test_bad', 'amount_test_bad', 'amount_test'
-                    ])
+    def get_numbers_p_for_empty_prediction_df(cls, num_p: list or int) -> list:
+        if type(num_p) == int:
+            num_p = range(1, num_p + 1)
+        p_cols = ['p_' + str(x) for x in num_p]
+        return p_cols
 
-        col_names = ['description']
-        result_df.loc[:, col_names] = result_df.loc[:, col_names].astype(str)
+    @classmethod
+    def get_empty_prediction_df(cls, num_p=Constant.NUM_P) -> pd.DataFrame:
+        description = ['description']
+        main_cols = ['rating', 'n_white_list', 'n_test_in_wl', 'n_test_bad_in_wl', 'amount_test_in_wl',
+                     'amount_test_bad_in_wl',
+                     'n_teach', 'n_teach_bad', 'n_test', 'n_test_bad', 'amount_test_bad', 'amount_test']
+        columns = description + num_p + main_cols
+
+        result_df = pd.DataFrame(columns=columns)
+        result_df.loc[:, description] = result_df.loc[:, description].astype(str)
 
         col_names = [col for col in result_df.columns if col.startswith('p_') or col.startswith('amount_')]
         col_names.append('rating')
@@ -95,7 +99,7 @@ class AnalyzerPrediction:
         threshold = str(round(test.probability.values[n_rows - 1], 6))
         return float(result), float(threshold)
 
-    def get_amount_3ds(self, percent: int)-> (float, float):
+    def get_amount_3ds(self, percent: int) -> (float, float):
         test = self.get_convert_test()
         test_first_cumsum_rows = test[test.cum_amount < percent * self.params.AMOUNT_TEST / 100]
         amount_bad = sum(Statistic.get_dt_bad(test_first_cumsum_rows).amount)
@@ -119,7 +123,7 @@ class AnalyzerPrediction:
             , 'n_test_bad_in_wl': params.N_TEST_BAD_IN_WL
             , 'amount_test_bad_in_wl': params.AMOUNT_TEST_BAD_IN_WL}
 
-    def get_convert_test(self)->pd.DataFrame:
+    def get_convert_test(self) -> pd.DataFrame:
         test = self.test.copy()
         white_list = self.white_list
         test["probability"] = pd.to_numeric(test["probability"], errors="coerce")

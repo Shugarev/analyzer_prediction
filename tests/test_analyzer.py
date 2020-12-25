@@ -24,6 +24,11 @@ class TestAnalyzer(unittest.TestCase):
         result_df = list(result_df)
         self.assertEqual(result_df, DataForTests.COL_NAMES, 'incorrect default columns')
 
+    def test_get_empty_prediction_df_col_names_2(self):
+        result_df = AnalyzerPrediction.get_empty_prediction_df(['p_1', 'p_5', 'p_10', 'p_15', 'p_50'])
+        result_df = list(result_df)
+        self.assertEqual(result_df, DataForTests.COL_NAMES_2, 'incorrect default columns')
+
     def test_get_xgb_weight(self):
         expected_weight = [2, 1, 2, 2, 1, 1, 1, 1, 2, 1]
         result = self.analyzer.get_xgb_weight()
@@ -69,5 +74,16 @@ class TestAnalyzer(unittest.TestCase):
         result_df = result_df.to_dict()
         self.assertDictEqual(result_df, DataForTests.EXPECTED_RESULT_DF, 'incorrect default columns or data')
 
+    def test_get_numbers_p_for_empty_prediction_df_with_int(self):
+        n_p_cols = 10
+        result = self.analyzer.get_numbers_p_for_empty_prediction_df(n_p_cols)
+        expected = ['p_1', 'p_2', 'p_3', 'p_4', 'p_5', 'p_6', 'p_7', 'p_8', 'p_9', 'p_10']
+        self.assertListEqual(result, expected, 'incorrect default data')
+
+    def test_get_numbers_p_for_empty_prediction_df_with_list(self):
+        n_p_cols = [1, 5, 10, 15, 50]
+        result = self.analyzer.get_numbers_p_for_empty_prediction_df(n_p_cols)
+        expected = ['p_1', 'p_5', 'p_10', 'p_15', 'p_50']
+        self.assertListEqual(result, expected, 'incorrect default data')
 
 
