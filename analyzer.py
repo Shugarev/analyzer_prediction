@@ -47,8 +47,8 @@ class AnalyzerPrediction:
     @classmethod
     def get_rating(cls, row: dict):
         result = float(row["p_1"]) + float(row["p_2"]) + float(row["p_3"]) + \
-                 float(row["p_4"]) + float(row["p_5"]) + float(row["p_10"]) + \
-                 float(row["p_20"])
+                 float(row["p_4"]) + float(row["p_5"]) + float(row["p_6"]) + float(row["p_7"]) +\
+                 float(row["p_10"]) + float(row["p_20"])
         return result
 
     @classmethod
