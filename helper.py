@@ -30,6 +30,14 @@ class DataHelper:
         self.train[self.num_features] = self.train[self.num_features].apply(pd.to_numeric, errors="coerce")
         self.test[self.num_features] = self.test[self.num_features].apply(pd.to_numeric, errors="coerce")
 
+    @staticmethod
+    def print_count_na_in_column(df, columns_with_na):
+        info_na_columns = []
+        for col in list(columns_with_na):
+            n_na = str(df[col].isnull().sum())
+            info_na_columns.append(col + "_na: " + n_na)
+        print(','.join(info_na_columns))
+
     def show_columns_with_na(self) -> (pd.Series, pd.Series):
         if self.train is None or self.test is None:
             print('incorrect train')
@@ -38,8 +46,13 @@ class DataHelper:
 
         train_na_columns = self.train.columns[self.train.isnull().any(axis=0)]
         test_na_columns = self.test.columns[self.test.isnull().any(axis=0)]
+        print("Statistic na values in columns : ")
+
         print("train na columns : {}" . format(train_na_columns))
+        self.print_count_na_in_column(self.train, train_na_columns)
+
         print("test na columns : {}" . format(test_na_columns))
+        self.print_count_na_in_column(self.test, test_na_columns)
         return train_na_columns, test_na_columns
 
     def get_mean_value(self) -> dict:
@@ -50,9 +63,10 @@ class DataHelper:
         return mean_values
 
     def replaced_na_values(self, replaced_values: dict):
+        print("Replaced na values:")
         for col in self.num_features:
             replaced_val = replaced_values.get(col) or replaced_values.get('default')
-            print(replaced_val)
+            print(col + "_na -> " + str(replaced_val))
             self.train[col] = self.train[col].fillna(replaced_val)
             self.test[col] = self.test[col].fillna(replaced_val)
 
