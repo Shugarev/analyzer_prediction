@@ -56,14 +56,28 @@ class UtilsKy:
 
     WHITE_KY9 = '/mnt/files/workdata/work/merchants/merchant_32_ky9_2020-05-12_white_visa/04_experiments' \
                 '/white_lists/white_list_CardMasked_trusted_2019-12-17.csv'
-
+    
     PATH_DATA_KY9_FOR_PROD = '/mnt/files/workdata/work/merchants/merchant_32_ky9_2020-05-12_white_visa/04_experiments' \
                              '/ex_06_for_prod/'
     DB_TEACH_KY9_FOR_PROD = PATH_DATA_KY9_FOR_PROD + 'db_teach_for_prod_ky9_2018-12-19_2020-04-02.csv'
     DB_TEST_KY9_FOR_PROD = PATH_DATA_KY9_FOR_PROD + 'db_test_for_prod_ky9_2020-04-02_2020-05-12.csv'
+    WHITE_KY9_FOR_PROD = PATH_KY9 + '04_experiments/white_lists/white_list_ky9_for_prod_trusted_2020-03-23.csv'
+    # ky10
+    PATH_DATA_KY10 = '/mnt/files/workdata/work/merchants/merchant_35_ky_2021-03-12/'
+    KY_10_FOR_RESOLVE = PATH_DATA_KY10 + '02_pure_data/ky10_for_resolve.csv'
+    KY_10_RESOLVED = PATH_DATA_KY10 + '02_pure_data/ky10_resolved.csv'
+    DB_TEACH_KY10 = PATH_DATA_KY10 + '02_pure_data/ky10_2021-02-02_2021-02-27.csv'
+    DB_TEST_KY10 = PATH_DATA_KY10 + '02_pure_data/ky10_2021-03-04_2021-03-13.csv'
 
+    DB_TEACH_KY10_2 = PATH_DATA_KY10 + '02_pure_data/2_ky10_2021-02-02_2021-02-26.csv'
+    DB_TEST_KY10_2 = PATH_DATA_KY10 + '02_pure_data/2_ky10_2021-02-28_2021-03-13.csv'
+    KY10_ALL_CB = PATH_DATA_KY10 + '02_pure_data/3_ky10_all_cb_2021-02-02_2021-02-15.csv'
+
+    KY9_RESOLVED_FOR_KY10 = PATH_KY9 + '02_pure_data/ky9_for_ky10_last.csv'
+################################################
     GRAFANA_OPERATIONS = '/mnt/files/workdata/work/merchants/merchant_31_data_for_grafana/02_pure_data/' \
                          'operations_with_am_usd.csv'
+    COUNTY_CODE = '/mnt/files/workdata/work/python-scripts/prediction_analyzer/data_json/county-code.csv'
 
 
 

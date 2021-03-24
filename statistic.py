@@ -134,7 +134,7 @@ class Statistic:
         return result_df
 
     @classmethod
-    def train_test_split_with_diff_ids(cls, dt: pd.DataFrame, train_size=0.8, random_state=4321, test_has_unique_ids=False):
+    def split_train_test_with_diff_ids(cls, dt: pd.DataFrame, train_size=0.8, random_state=4321, test_has_unique_ids=False):
         '''
         Split dataframe into random train and test subsets.
         Train and test have no common bad ids.
@@ -168,17 +168,19 @@ class Statistic:
             mask = df_good.id.isin(test_good_id)
             X_test_good = df_good[mask]
 
-        drop_column = ['id', 'status']
-
         X_train = pd.concat([X_train_bad, X_train_good])
-        y_train = X_train.status
-        X_train.drop(columns=drop_column, inplace=True)
-
         X_test = pd.concat([X_test_bad, X_test_good])
-        y_test = X_test.status
-        X_test.drop(columns=drop_column, inplace=True)
 
-        return X_train, X_test, y_train, y_test
+        return X_train, X_test
+
+
+    @classmethod
+    def split_train_test_indexes(cls, dt: pd.DataFrame, train_size=0.8, random_state=4321, test_has_unique_ids=False):
+        X_train, X_test = Statistic.split_train_test_with_diff_ids(dt, train_size=train_size, random_state=random_state,
+                                                                   test_has_unique_ids=test_has_unique_ids)
+
+        return X_train.index, X_test.index
+
 
     @classmethod
     def get_quantile_stat(cls, dt: pd.DataFrame, col_name: str):
